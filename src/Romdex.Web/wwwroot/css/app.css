@@ -1,0 +1,1522 @@
+/*
+    Themes. theme.js sets three attributes on <html> from the signed-in user's appearance (or, before sign-in, the last
+    one this browser used): data-color, data-mode (light, dark or black; auto is resolved to light or dark) and
+    data-contrast="high". Every colour in the app comes from these properties.
+*/
+
+/* Light, and the status colours every light theme shares. */
+:root {
+    --radius: 8px;
+    --owned: #1f7a4d;
+    --owned-bg: #e3f3ea;
+    --partial: #8a5a00;
+    --partial-bg: #fbf0d9;
+    --covered: #2f5f8a;
+    --covered-bg: #e2edf7;
+    --missing: #a23b2d;
+    --missing-bg: #f8e4e1;
+    /* Fills, for the ownership meters and legend: brighter than the text colours, which have to be read on their backgrounds. */
+    --owned-fill: #2e9e63;
+    --partial-fill: #e5a32b;
+    --covered-fill: #4a8fd6;
+    --missing-fill: #f3cdc7;
+    color-scheme: light;
+
+    /* Blue, Romdex's own, until theme.js says otherwise. */
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --text: #1a1e24;
+    --muted: #5d6570;
+    --border: #dce2ea;
+    --accent: #2a5fb0;
+    --accent-text: #ffffff;
+}
+
+:root[data-color="pink"] { --bg: #faf6f8; --surface: #ffffff; --text: #231a1f; --muted: #6d5f66; --border: #eadde3; --accent: #b8296a; --accent-text: #ffffff; }
+:root[data-color="green"] { --bg: #f6f7f5; --surface: #ffffff; --text: #1b1f1d; --muted: #5f6763; --border: #dde1de; --accent: #1f6f5c; --accent-text: #ffffff; }
+:root[data-color="grey"] { --bg: #f5f5f5; --surface: #ffffff; --text: #1c1c1c; --muted: #616161; --border: #dddddd; --accent: #2e2e2e; --accent-text: #ffffff; }
+:root[data-color="purple"] { --bg: #f8f6fb; --surface: #ffffff; --text: #1f1a26; --muted: #655d70; --border: #e2dcea; --accent: #6a3dbb; --accent-text: #ffffff; }
+:root[data-color="amber"] { --bg: #faf7f2; --surface: #ffffff; --text: #241d14; --muted: #6b6155; --border: #ebe2d5; --accent: #a64b06; --accent-text: #ffffff; }
+
+/* Dark, and black, which is dark with pure black behind for OLED screens. */
+:root:is([data-mode="dark"], [data-mode="black"]) {
+    --owned: #6fd19f;
+    --owned-bg: #193325;
+    --partial: #f0c062;
+    --partial-bg: #3a2e14;
+    --covered: #8cbbe6;
+    --covered-bg: #18293a;
+    --missing: #f08a7c;
+    --missing-bg: #3a1d19;
+    --owned-fill: #5cc890;
+    --partial-fill: #e8b453;
+    --covered-fill: #78aee0;
+    --missing-fill: #4a2520;
+    color-scheme: dark;
+
+    --bg: #10141a; --surface: #181e26; --text: #e5eaf0; --muted: #97a2b0; --border: #2a323d; --accent: #6ea8f5; --accent-text: #0b1320;
+}
+
+:root:is([data-mode="dark"], [data-mode="black"])[data-color="pink"] { --bg: #151012; --surface: #1f181b; --text: #f0e6ea; --muted: #a8969e; --border: #352a2f; --accent: #f27aae; --accent-text: #1a0d13; }
+:root:is([data-mode="dark"], [data-mode="black"])[data-color="green"] { --bg: #121513; --surface: #1b1f1d; --text: #e6e9e7; --muted: #9aa39e; --border: #2d3330; --accent: #4fb89a; --accent-text: #0d1311; }
+:root:is([data-mode="dark"], [data-mode="black"])[data-color="grey"] { --bg: #121212; --surface: #1c1c1c; --text: #ececec; --muted: #9e9e9e; --border: #2f2f2f; --accent: #e6e6e6; --accent-text: #121212; }
+:root:is([data-mode="dark"], [data-mode="black"])[data-color="purple"] { --bg: #13101a; --surface: #1c1824; --text: #ebe6f2; --muted: #a39cb0; --border: #312a3c; --accent: #b294f5; --accent-text: #150d24; }
+:root:is([data-mode="dark"], [data-mode="black"])[data-color="amber"] { --bg: #15110c; --surface: #1f1a13; --text: #f2ebe1; --muted: #aa9f90; --border: #372e22; --accent: #f5a54a; --accent-text: #1f1305; }
+
+/* Black keeps each colour's accent, with neutral black and near-black behind it. */
+/* As specific as the colours' dark rules above, so it wins by coming after them. */
+:root[data-mode="black"][data-color] { --bg: #000000; --surface: #0c0c0c; --border: #242424; }
+
+/*
+    High contrast: plainer text and borders, and status colours from the Okabe-Ito palette, which people with the
+    common kinds of colour blindness can tell apart: bluish green, orange, blue and reddish purple.
+*/
+:root[data-contrast="high"] {
+    --text: #000000;
+    --muted: #333333;
+    --border: #767676;
+    --owned: #00664a;
+    --owned-bg: #d9f2ea;
+    --partial: #8a4b00;
+    --partial-bg: #fde9cc;
+    --covered: #005a9c;
+    --covered-bg: #d6e9f7;
+    --missing: #93306a;
+    --missing-bg: #f6dcec;
+    --owned-fill: #009e73;
+    --partial-fill: #e69f00;
+    --covered-fill: #0072b2;
+    --missing-fill: #ecc4dc;
+}
+
+:root[data-contrast="high"]:is([data-mode="dark"], [data-mode="black"]) {
+    --text: #ffffff;
+    --muted: #d0d0d0;
+    --border: #8a8a8a;
+    --owned: #3fd6a8;
+    --owned-bg: #0b3326;
+    --partial: #ffb84d;
+    --partial-bg: #3d2a0a;
+    --covered: #6cc0ff;
+    --covered-bg: #0b2a40;
+    --missing: #f08ccb;
+    --missing-bg: #3d1530;
+    --owned-fill: #2fc597;
+    --partial-fill: #f2a91a;
+    --covered-fill: #3fa3e8;
+    --missing-fill: #5a2148;
+}
+
+:root[data-contrast="high"] :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+/* A page's own title under a section's heading, such as a playlist's under Library: as big, a level down. */
+h2.title { font-size: 1.6rem; margin: 0 0 .25rem; }
+h2 { font-size: 1.15rem; margin: 1.75rem 0 .5rem; }
+
+.boot { padding: 3rem; text-align: center; color: var(--muted); }
+
+/* Layout */
+.topbar {
+    display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap;
+    padding: .6rem 1rem; background: var(--surface); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+}
+/* A dialog opened from the top bar (the Scan menu's) is drawn in it, so the bar comes above the player while it's open. */
+.topbar:has(.dialog-backdrop) { z-index: 100; }
+.brand { display: inline-flex; align-items: center; gap: .5rem; font-weight: 700; font-size: 1.1rem; color: var(--text); }
+.brand:hover { text-decoration: none; }
+.logo { width: 1.6rem; height: 1.6rem; flex: none; }
+.nav { display: flex; gap: .25rem; flex-wrap: nowrap; }
+.nav a { display: inline-flex; align-items: center; padding: .3rem .6rem; border-radius: 6px; color: var(--muted); white-space: nowrap; }
+/* Where the pages' names don't fit on their line, each is its icon (topbar.js says when), its name kept for screen readers. */
+.nav-icon { display: none; width: 1.15rem; height: 1.15rem; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.topbar.compact .nav-icon { display: block; }
+.topbar.compact .nav a { padding: .4rem .55rem; }
+.topbar.compact .nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.nav a.active { background: var(--bg); color: var(--text); font-weight: 600; }
+.nav a:hover { text-decoration: none; color: var(--text); }
+/* Between a phone and a wide screen, everything closer together, and the file count left to the Library page, so the bar stays one line. */
+@media (max-width: 1100px) {
+    .topbar { gap: .75rem; }
+    .nav a { padding: .3rem .45rem; }
+    .topbar .scan-count { display: none; }
+}
+/*
+    On a phone, two lines: Romdex, Scan, Settings and the account on the first, the pages across the whole of the
+    second. The empty ::after, a whole line wide, is what breaks them. What a task is doing is left to Activity (its
+    greyed button says something is).
+*/
+@media (max-width: 640px) {
+    .topbar { row-gap: .4rem; gap: .5rem; }
+    .topbar::after { content: ""; order: 5; flex-basis: 100%; }
+    .topbar > .spacer { order: 1; }
+    .topbar > .scan-status { order: 2; }
+    .topbar > .topbar-icon { order: 3; }
+    .topbar > .account-menu { order: 4; margin-left: 0; }
+    .topbar .scan-progress { display: none; }
+    /* The pages share the line evenly as icons; the one you're on widens to a pill with its name, and the others make
+       room for it as it does. */
+    .topbar > .nav { order: 6; flex: 1 1 100%; gap: .25rem; }
+    .topbar .nav a {
+        flex: 1 1 0; min-width: 0; justify-content: center; padding: .45rem .3rem; border-radius: 999px;
+        transition: flex-grow .4s cubic-bezier(.2, .8, .2, 1), background-color .3s, color .3s;
+    }
+    .topbar .nav a.active { flex-grow: 2.6; color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
+    .topbar .nav .nav-icon { display: block; transition: transform .4s cubic-bezier(.2, .8, .2, 1); }
+    .topbar .nav a:active .nav-icon { transform: scale(.88); }
+    .topbar .nav .nav-label {
+        position: static; width: auto; height: auto; clip-path: none; overflow: hidden; display: inline-block;
+        max-width: 0; opacity: 0; margin-left: 0;
+        transition: max-width .4s cubic-bezier(.2, .8, .2, 1), opacity .25s, margin-left .4s cubic-bezier(.2, .8, .2, 1);
+    }
+    .topbar .nav a.active .nav-label { max-width: 6.5rem; opacity: 1; margin-left: .4rem; transition-delay: 0s, .1s, 0s; }
+}
+@media (max-width: 640px) and (prefers-reduced-motion: reduce) {
+    .topbar .nav a, .topbar .nav .nav-icon, .topbar .nav .nav-label { transition: none; }
+}
+/* Where even the first line is short of room, Romdex is its logo. */
+@media (max-width: 360px) { .brand { font-size: 0; gap: 0; } }
+.spacer { flex: 1; }
+main { max-width: 1100px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+/*
+    On a computer the page scrolls in its own box below the top bar, and above the player, so the scrollbar is only
+    beside the page. Phones keep scrolling the whole window: their scrollbars sit over the page anyway, and that way the
+    browser's own bars can tuck away as you scroll.
+*/
+@media (hover: hover) and (pointer: fine) {
+    html:has(.page-scroll), html:has(.page-scroll) body { height: 100%; overflow: hidden; }
+    body:has(.page-scroll) #app { height: 100%; display: flex; flex-direction: column; }
+    #app > * { flex: none; }
+    #app > .page-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+    .settings-nav { top: 1.25rem; }
+}
+
+/*
+    Scrollbars in the theme's colours: a muted thumb, stronger under the pointer and the accent colour while held. Where
+    the browser has its own scrollbar styles (Chrome, Edge, Safari) they're used, as they can tell when the thumb is
+    held; elsewhere (Firefox) a script marks the box whose scrollbar is held (see scroll.js).
+*/
+@supports selector(::-webkit-scrollbar) {
+    ::-webkit-scrollbar { width: 12px; height: 12px; background: transparent; }
+    ::-webkit-scrollbar-corner { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--muted) 45%, transparent); border: 3px solid transparent; border-radius: 6px; background-clip: padding-box; }
+    ::-webkit-scrollbar-thumb:hover { background-color: var(--muted); }
+    ::-webkit-scrollbar-thumb:active { background-color: var(--accent); }
+}
+@supports not selector(::-webkit-scrollbar) {
+    * { scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent; }
+    .scrollbar-held { scrollbar-color: var(--accent) transparent; }
+}
+
+/* Controls */
+button, .button {
+    font: inherit; padding: .4rem .8rem; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+}
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+button:disabled { opacity: .55; cursor: default; }
+button.link { border: none; background: none; color: var(--accent); padding: 0; }
+input[type=search], input[type=text], input[type=number], select, textarea {
+    font: inherit; padding: .4rem .6rem; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface); color: var(--text);
+}
+textarea { resize: vertical; line-height: 1.45; }
+input[type=search] { width: 100%; max-width: 420px; }
+label { display: inline-flex; align-items: center; gap: .4rem; }
+
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+.row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.toolbar { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin: 1rem 0; }
+
+/* Cards and tables */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { text-align: left; padding: .5rem .75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.table th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+.table tr:last-child td { border-bottom: none; }
+.table td.num, .table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.table tr.dim td { opacity: .6; }
+
+/* Status badges */
+.badge {
+    display: inline-block; padding: .2rem .7rem; border-radius: 999px; font-size: .78rem; font-weight: 600; line-height: 1.3; white-space: nowrap;
+}
+.badge.complete, .badge.owned { color: var(--owned); background: var(--owned-bg); }
+.badge.partial { color: var(--partial); background: var(--partial-bg); }
+.badge.covered, .badge.ownedElsewhere { color: var(--covered); background: var(--covered-bg); }
+.badge.missing { color: var(--missing); background: var(--missing-bg); }
+.badge.neutral, .badge.ignored, .badge.elsewhere { color: var(--muted); background: var(--bg); border: 1px solid var(--border); }
+
+/* A file's quality, "FLAC 16/44.1": a small tag, coloured by how good it is. */
+.quality { display: inline-block; font-size: .72rem; font-weight: 600; line-height: 1.5; padding: 0 .35rem; border-radius: 4px; margin-right: .4rem;
+    white-space: nowrap; vertical-align: 1px; color: var(--muted); background: var(--bg); border: 1px solid var(--border); }
+.quality.hires { color: var(--accent); border-color: var(--accent); }
+.quality.lossless { color: var(--owned); background: var(--owned-bg); border-color: transparent; }
+.quality.good { color: var(--covered); background: var(--covered-bg); border-color: transparent; }
+.quality.low { color: var(--partial); background: var(--partial-bg); border-color: transparent; }
+.tile-quality .quality, .track-main .quality { margin: 0 0 0 .4rem; }
+.page-head .row .quality { margin: 0; }
+
+.meter { height: 6px; background: var(--missing-fill); border-radius: 999px; overflow: hidden; min-width: 80px; }
+.meter > span { display: block; height: 100%; background: var(--owned-fill); }
+
+.ids { display: flex; gap: .5rem; flex-wrap: wrap; font-size: .8rem; }
+.ids code { background: var(--bg); padding: .05rem .35rem; border-radius: 4px; border: 1px solid var(--border); }
+
+.notice { padding: .75rem 1rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); margin: 1rem 0; }
+.empty { padding: 2rem; text-align: center; color: var(--muted); }
+
+details > summary { cursor: pointer; color: var(--muted); margin: 1.5rem 0 .5rem; }
+
+#blazor-error-ui {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0; padding: .75rem 1rem;
+    background: var(--missing-bg); color: var(--missing); z-index: 100;
+}
+#blazor-error-ui .dismiss { cursor: pointer; float: right; }
+
+.show-narrow { display: none; }
+@media (max-width: 640px) {
+    .hide-narrow { display: none; }
+    .show-narrow { display: block; }
+    .table th, .table td { padding: .45rem .5rem; }
+}
+
+/* Album lists stack per type on the artist page; fixed columns keep them aligned. */
+.table.albums { table-layout: fixed; }
+.table.albums th:nth-child(3) { width: 4.5rem; }
+.table.albums th:nth-child(4) { width: 8rem; }
+.table.albums th:nth-child(5) { width: 6.5rem; }
+.table.albums td:nth-child(5) { white-space: nowrap; }
+.table.albums th:nth-child(6) { width: 12.5rem; }
+.table.albums td:nth-child(2) { overflow-wrap: anywhere; }
+/* On a phone, the status under the title and two buttons a row, so the title keeps the room. */
+@media (max-width: 640px) {
+    .table.albums th:nth-child(6) { width: 5.5rem; }
+    .table.albums .show-narrow .badge { font-size: .7rem; padding: 0 .4rem; margin-top: .15rem; }
+}
+.nowrap { white-space: nowrap; }
+
+/* A failed scan's reason in the top bar; the full text is in the tooltip. */
+.error { color: var(--missing); max-width: 40ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 640px) { .error { max-width: 18ch; } }
+/* A sentence of its own says all of itself; only short errors in a row are cut off. */
+p.error { max-width: none; white-space: normal; }
+
+/* The activity log: one line per event, warnings and errors marked by colour and a left rule. */
+.log { padding: .25rem 0; font-size: .875rem; }
+.log-entry { display: grid; grid-template-columns: 4.5rem 8.5rem 1fr; gap: .75rem; padding: .3rem 1rem; border-left: 3px solid transparent; }
+.log-entry + .log-entry { border-top: 1px solid var(--border); }
+.log-entry.warning { border-left-color: var(--partial); background: var(--partial-bg); }
+.log-entry.warning .log-message { color: var(--partial); }
+.log-entry.error { border-left-color: var(--missing); background: var(--missing-bg); }
+.log-entry.error .log-message { color: var(--missing); }
+.log-entry.success { border-left-color: var(--owned); background: var(--owned-bg); }
+.log-entry.success .log-message { color: var(--owned); }
+.log-time { font-variant-numeric: tabular-nums; }
+.log-source { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log-message { overflow-wrap: anywhere; min-width: 0; }
+@media (max-width: 640px) {
+    .log-entry { grid-template-columns: 4rem 1fr; gap: .5rem; padding: .3rem .75rem; }
+}
+
+/* Artwork, or a placeholder icon until artwork is fetched. Square, and as wide as its container. */
+/* Nothing inside takes up room, so the placeholder icon can't stretch the box: it's always as wide as it's told. */
+.cover {
+    position: relative; aspect-ratio: 1; width: 100%; min-width: 0; min-height: 0; border-radius: 6px; overflow: hidden;
+    display: block; background: var(--bg); border: 1px solid var(--border); box-sizing: border-box; flex: none;
+}
+.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover svg {
+    position: absolute; inset: 0; margin: auto; width: 45%; height: 45%;
+    fill: none; stroke: var(--muted); stroke-width: 1.5; opacity: .7;
+}
+
+/* The library: one square per artist. */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
+.tile {
+    display: flex; flex-direction: column; gap: .4rem; padding: .75rem; color: var(--text);
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0;
+}
+.tile:hover { text-decoration: none; border-color: var(--accent); }
+.tile .tile-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile .meter { min-width: 0; }
+@media (max-width: 640px) { .tiles { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: .75rem; } }
+/* A long grid of tiles draws only the rows near the screen (see TileGrid.razor). An empty grid beside them measures how
+   many fit in a row; each row is a grid of its own, as far from the next as tiles are from each other. */
+.tile-probe { height: 0; overflow: hidden; }
+.tile-row { margin-bottom: 1rem; }
+@media (max-width: 640px) { .tile-row { margin-bottom: .75rem; } }
+/* Each row not drawn is a row of slots shaped like the tiles drawn: their background, and their cover and lines of text
+   shimmering, so a grid scrolled quickly fills in rather than flashing blank. A slot's shapes are measured from a tile
+   drawn (grid.js), and until one is there's nothing to draw. They're masks of the slot's two layers, which have nothing
+   in them: a mask over something with things in it is drawn whole, and one thousands of rows tall isn't drawn at all.
+   Above the rows drawn, the slots line up with the first of them. */
+.tile-grid > div:not([class]) { position: relative; }
+.tile-grid[style*="--slot-tile"] > div:not([class])::before, .tile-grid[style*="--slot-tile"] > div:not([class])::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; mask-repeat: repeat;
+}
+.tile-grid > div:not([class])::before { background: var(--surface); mask-image: var(--slot-tile); mask-size: var(--slot-cell); }
+.tile-grid > div:not([class])::after {
+    background: linear-gradient(100deg, var(--bg) 30%, var(--border) 50%, var(--bg) 70%) 0 0 / 300% 100%;
+    animation: shimmer 1.4s linear infinite;
+    mask-image: var(--slot-parts); mask-size: var(--slot-cell);
+}
+.tile-probe + div:not([class])::before, .tile-probe + div:not([class])::after { mask-position: 0 100%; }
+
+/* "Only missing" stands out from the other filters: it changes what the library and artist pages are for. */
+.toggle {
+    padding: .35rem .7rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); cursor: pointer;
+}
+.toggle:has(input:checked) { border-color: var(--missing); color: var(--missing); background: var(--missing-bg); }
+
+/* Artist and album pages: artwork beside the title. */
+/* The cover's foot level with the buttons' under the title. */
+.page-head { display: flex; gap: 1rem; align-items: flex-end; }
+.page-head > .cover { width: 96px; flex: none; }
+/* On a phone, the artwork beside the title and what's under it, and the buttons across the page below. */
+@media (max-width: 640px) {
+    .page-head { display: grid; grid-template-columns: 88px minmax(0, 1fr); column-gap: .9rem; row-gap: .25rem; align-items: center; }
+    .page-head > .cover { width: 88px; grid-row: 1 / span 2; align-self: start; }
+    .page-head > div:last-child { display: contents; }
+    .page-head > div:last-child > * { grid-column: 2; margin: 0; }
+    .page-head > div:last-child > .album-actions { grid-column: 1 / -1; margin-top: .6rem !important; }
+}
+/* A list straight under a page's head keeps clear of its buttons. */
+.page-head + .card, .page-head + .notice + .card, .page-head + .error + .card { margin-top: 1rem; }
+.crumbs { margin-bottom: .35rem; }
+
+/* Collapsible sections on the artist page. */
+h2.section { margin: 1.5rem 0 .5rem; }
+.section-toggle {
+    font: inherit; font-weight: 700; border: none; background: none; padding: 0; color: var(--text);
+    display: inline-flex; align-items: center; gap: .5rem;
+}
+.chevron { width: .5rem; height: .5rem; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(-45deg); transition: transform .15s; }
+.chevron.open { transform: rotate(45deg); }
+
+/* Album lists start with a small cover. */
+.table .cover-col { width: 3.5rem; padding-right: 0; }
+.table td.cover-col > a { display: block; width: 2.5rem; }
+.table td.cover-col .cover { width: 2.5rem; }
+
+/* A long option, such as an edition's full description, mustn't push the page wider than the screen. */
+.toolbar label { max-width: 100%; min-width: 0; }
+.toolbar select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
+
+/* Requests on their way: a badge in the accent colour, linking to the Activity page. */
+.badge.active { color: var(--accent); background: var(--bg); border: 1px solid var(--accent); }
+/* Something happening right now shimmers; something only waiting its turn doesn't. */
+.badge.active:not(.waiting) {
+    background-image: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--accent) 28%, transparent) 50%, transparent 70%);
+    background-size: 250% 100%; background-repeat: no-repeat; animation: badge-shimmer 1.6s linear infinite;
+}
+@keyframes badge-shimmer { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+@media (prefers-reduced-motion: reduce) { .badge.active:not(.waiting) { animation: none; } }
+a.badge:hover { text-decoration: none; filter: brightness(1.1); }
+td.actions { white-space: nowrap; }
+td.actions > * + * { margin-left: .6rem; }
+
+/* Review: the file on the left, the suggestion beside it, the actions at the end. Stacks on a phone. */
+/* The file and the suggestion share the room; the buttons take what they need, so nothing runs into them. */
+.review-item {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 1rem; padding: .75rem 1rem; margin-bottom: .75rem; align-items: start;
+}
+.review-item > div { min-width: 0; overflow-wrap: anywhere; }
+.suggestion-row { display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: .6rem; align-items: start; }
+.suggestion-row > a { display: block; }
+.suggestion-row .cover { width: 3rem; }
+.suggestion-text { min-width: 0; }
+.suggestion-text .suggestion { display: flex; gap: .5rem; align-items: baseline; min-width: 0; flex-wrap: nowrap; }
+/* A long title wraps to two lines, then ends with an ellipsis, rather than running under the buttons. */
+.suggestion-title { min-width: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.suggestion-text .confidence { flex: none; }
+.review-item .label { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; margin-bottom: .15rem; }
+.review-item .path { overflow-wrap: anywhere; }
+.review-actions { display: flex; gap: .5rem; align-items: center; justify-content: flex-end; white-space: nowrap; }
+.suggestion { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
+.confidence { font-size: .78rem; font-weight: 700; padding: .05rem .45rem; border-radius: 999px; font-variant-numeric: tabular-nums; }
+.confidence.high { color: var(--owned); background: var(--owned-bg); }
+.confidence.medium { color: var(--partial); background: var(--partial-bg); }
+.confidence.low { color: var(--missing); background: var(--missing-bg); }
+a.button { display: inline-block; color: var(--text); }
+a.button:hover { text-decoration: none; border-color: var(--accent); }
+@media (max-width: 640px) {
+    .review-item { grid-template-columns: 1fr; gap: .6rem; }
+    .review-actions { justify-content: flex-start; }
+}
+
+/* Activity: one row per request, opening to its parts and attempts. */
+.request { padding: .75rem 1rem; }
+.request + .request { border-top: 1px solid var(--border); }
+/* Every row has the same columns, whatever it is, so titles, kinds, states and times line up down the list. */
+.request-head {
+    display: grid; grid-template-columns: minmax(0, 1fr) 5.5rem 9.5rem 5.5rem 10.75rem; gap: .75rem; align-items: center; min-height: 2rem;
+}
+.request-toggle {
+    font: inherit; font-weight: 600; border: none; background: none; padding: 0; color: var(--text); text-align: left;
+    display: grid; grid-template-columns: .9rem minmax(0, 1fr); gap: .5rem; align-items: center; min-width: 0;
+}
+button.request-toggle { cursor: pointer; }
+.request-title { overflow-wrap: anywhere; }
+.request-state { min-width: 0; }
+.request-time { text-align: right; white-space: nowrap; }
+.request-actions { display: flex; justify-content: flex-end; gap: .3rem; }
+.request-detail { margin: .3rem 0 0 1.4rem; overflow-wrap: anywhere; }
+.request-meter { margin: .4rem 0 0 1.4rem; max-width: 320px; }
+.request-body { margin: .6rem 0 0 1.4rem; }
+.request-body .table td { padding-left: 0; }
+.icon-button.small { min-width: 1.9rem; height: 1.9rem; }
+.icon-button.small svg { width: .9rem; height: .9rem; }
+@media (max-width: 640px) {
+    .request { padding: .7rem .75rem; }
+    .request-head { grid-template-columns: minmax(0, 1fr) auto auto; gap: .5rem; }
+}
+.section-toggle.small { font-weight: 500; font-size: .9rem; text-align: left; }
+.job { padding: .5rem 0; border-top: 1px dashed var(--border); }
+.job details > summary { margin: .3rem 0; }
+.job-log { margin: 0; padding: .5rem .75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; font-size: .8rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.notice.error { max-width: none; white-space: normal; }
+
+/* Settings forms and plugin rows. */
+h3 { font-size: 1rem; margin: 1.25rem 0 .25rem; }
+.field { margin: .6rem 0; }
+.field-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: .2rem; }
+label.field { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+.field > span.muted.small { display: block; margin-top: .2rem; }
+.field input[type=text], .field input[type=password], .field select, .field textarea { width: 100%; max-width: 32rem; box-sizing: border-box; }
+input[type=password] { font: inherit; padding: .4rem .6rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); }
+code { font-size: .85em; background: var(--bg); padding: .05rem .3rem; border-radius: 4px; border: 1px solid var(--border); overflow-wrap: anywhere; }
+.plugin-message { color: var(--partial); overflow-wrap: anywhere; }
+
+/* Plugins: a panel per kind, each plugin a card of the same shape, with its actions along the bottom. */
+.plugin-sections { display: flex; flex-direction: column; gap: 1.25rem; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.panel-head { display: flex; align-items: flex-start; gap: 1rem; padding: .9rem 1.1rem; border-bottom: 1px solid var(--border); }
+.panel-title { flex: 1; min-width: 0; }
+.panel-title h2 { margin: 0; font-size: 1.05rem; }
+.panel-title p { margin: .25rem 0 0; }
+.panel-empty { padding: 1rem 1.1rem; }
+.plugin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: .75rem; padding: .9rem 1.1rem 1.1rem; }
+.plugin-card {
+    display: grid; grid-template-rows: auto auto 1fr auto; gap: .3rem; min-width: 0; height: 9.5rem; box-sizing: border-box;
+    padding: .7rem .8rem .6rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+}
+.plugin-top { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.plugin-top strong { min-width: 0; }
+.plugin-top .badge { flex: none; }
+.plugin-order {
+    flex: none; display: inline-grid; place-items: center; width: 1.35rem; height: 1.35rem; border-radius: 50%;
+    font-size: .75rem; font-weight: 700; background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+}
+.plugin-about, .plugin-card .plugin-message { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.plugin-card .plugin-message { align-self: start; }
+.plugin-about { cursor: pointer; }
+.plugin-card.open, .user-card { height: auto; min-height: 9.5rem; }
+.plugin-card.open .plugin-about, .plugin-card.open .plugin-message { display: block; -webkit-line-clamp: none; }
+.plugin-actions { display: flex; align-items: center; gap: .3rem; }
+.plugin-card.off .plugin-top strong, .plugin-card.off .plugin-about { opacity: .55; }
+@media (max-width: 640px) {
+    .panel-head { padding: .75rem .9rem; }
+    .plugin-grid { grid-template-columns: minmax(0, 1fr); padding: .75rem .9rem .9rem; }
+    .plugin-card { height: auto; min-height: 8rem; }
+}
+
+/* The library's views: artists, albums and tracks. */
+.segmented { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.segmented button { font: inherit; border: none; background: none; padding: .35rem .9rem; color: var(--muted); cursor: pointer; }
+.segmented button + button { border-left: 1px solid var(--border); }
+.segmented button.selected { color: var(--text); background: var(--bg); font-weight: 600; }
+/* Each label keeps room for itself in bold, so picking one doesn't make the control grow. */
+.segment-label { display: inline-flex; flex-direction: column; align-items: center; }
+.segment-label::after { content: attr(data-label); font-weight: 600; height: 0; overflow: hidden; visibility: hidden; user-select: none; pointer-events: none; }
+.tile .tile-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.track-list { table-layout: fixed; }
+.track-list td { height: 56px; box-sizing: border-box; }
+.track-list col.cover-col { width: 3.5rem; }
+.track-list col.num-col { width: 3.5rem; }
+/* "On another album" is the widest status. */
+.album-tracks col.status-col { width: 9.5rem; }
+/* Tall enough for a title and its file's path, whether there is one or not. */
+.album-tracks td { height: 58px; }
+/* On a phone, two buttons a row, so the title keeps some room. */
+@media (max-width: 640px) {
+    .album-tracks col.num-col { width: 2.25rem; }
+    .album-tracks col.wide-action-col { width: 5.5rem; }
+    .album-tracks .badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
+}
+.track-list col.format-col { width: 4.5rem; }
+.track-list col.album-col { width: 32%; }
+.track-list col.length-col { width: 4.5rem; }
+.track-list col.status-col { width: 8rem; }
+.track-list col.action-col { width: 5rem; }
+.track-list col.wide-action-col { width: 11rem; }
+@media (max-width: 640px) { .track-list col.hide-narrow { width: 0; } .track-list col.status-col { width: 6.5rem; } .track-list col.wide-action-col { width: 8.5rem; } }
+/* On a phone, lists that would squeeze their titles show the status beside or under them, with two buttons a row. */
+@media (max-width: 640px) {
+    .narrow-status col.status-col { display: none; }
+    .narrow-status col.wide-action-col { width: 5.5rem; }
+    .narrow-status .show-narrow .badge { font-size: .7rem; padding: 0 .4rem; vertical-align: 1px; }
+    .narrow-status span.show-narrow { display: inline; margin-right: .3rem; }
+    .narrow-status div.show-narrow { margin-top: .1rem; }
+}
+
+/* A heading with a button beside it. */
+.section-head { display: flex; align-items: center; gap: .75rem; margin-top: 1.5rem; }
+.section-head h2, .section-head h3 { margin: 0; }
+.section-head.sub { margin-top: 1rem; }
+h2.section-title { margin: 1.5rem 0 0; }
+.templates { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: .75rem; margin-bottom: .75rem; }
+.template {
+    font: inherit; color: var(--text); text-align: left; cursor: pointer; padding: .75rem 1rem;
+    display: flex; flex-direction: column; align-items: flex-start; gap: .35rem;
+}
+.template:hover:not(:disabled) { border-color: var(--accent); }
+.template:disabled { cursor: default; opacity: .7; }
+.dialog.wide { width: min(44rem, 100%); }
+.dialog .templates { margin: 0; }
+.template { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+
+/* The player: fixed along the bottom, with the queue opening above it. The spacer keeps it off the page's end. What's
+   playing is on the left, the controls and seek bar in the middle, and the rest on the right, as music apps have it. */
+.player-space { height: 5.75rem; }
+.player { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; }
+.player-bar {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr); gap: 1rem; align-items: center;
+    position: relative; padding: .5rem 1rem; background: var(--surface); border-top: 1px solid var(--border);
+}
+/* A phone's: the button behind it all that opens the full-screen player, and the line showing how far the song has got. */
+.player-open, .player-progress { display: none; }
+.player-track { display: flex; gap: .75rem; align-items: center; min-width: 0; }
+.player-art { position: relative; width: 3.5rem; flex: none; padding: 0; border: none; background: none; border-radius: 6px; height: auto; }
+.player-art .cover { width: 100%; }
+.player-art > svg {
+    position: absolute; top: .2rem; right: .2rem; width: 1.1rem; height: 1.1rem; padding: .1rem; border-radius: 999px;
+    background: rgb(0 0 0 / .6); stroke: white; stroke-width: 2.5; fill: none; opacity: 0; transition: opacity .15s;
+}
+.player-art:hover > svg, .player-art:focus-visible > svg { opacity: 1; }
+.player-text { min-width: 0; }
+.player-title a { color: var(--text); font-weight: 600; }
+.player-centre { display: flex; flex-direction: column; align-items: center; gap: .1rem; min-width: 0; }
+.player-centre .player-seek { width: 100%; max-width: 40rem; }
+.player-controls, .player-end { display: flex; gap: .35rem; align-items: center; }
+.player-end { justify-content: flex-end; }
+.player-seek { display: flex; gap: .6rem; align-items: center; }
+.player-seek input { flex: 1; min-width: 0; accent-color: var(--accent); }
+.player-seek .time { width: 3rem; text-align: center; font-variant-numeric: tabular-nums; }
+.volume { position: relative; display: flex; align-items: center; gap: .1rem; }
+.volume input { width: 6rem; accent-color: var(--accent); }
+.volume > .volume-open { display: none; }
+.volume-pop {
+    position: absolute; right: 0; bottom: calc(100% + .9rem); z-index: 31; display: flex; align-items: center; gap: .25rem;
+    padding: .35rem .7rem .35rem .35rem; box-shadow: 0 6px 24px rgb(0 0 0 / .25);
+}
+.volume-pop input { width: 9rem; }
+button.icon {
+    display: inline-grid; place-items: center; width: 2.25rem; height: 2.25rem; padding: 0; border-radius: 999px;
+    border: none; background: none; color: var(--text);
+}
+button.icon:hover:not(:disabled), button.icon.on { background: var(--bg); }
+button.icon svg { width: 1.2rem; height: 1.2rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+button.icon.play { width: 2.75rem; height: 2.75rem; background: var(--accent); color: var(--accent-text); }
+button.icon.play:hover:not(:disabled) { background: var(--accent); filter: brightness(1.1); }
+button.icon.play svg { fill: currentColor; }
+/* A block of its own wherever it is: inline, a span's size doesn't apply, and it's only a sliver of border. */
+.spinner {
+    display: inline-block; flex: none;
+    width: 1.1rem; height: 1.1rem; border-radius: 999px; border: 2px solid currentColor; border-right-color: transparent;
+    animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.player-queue {
+    position: absolute; right: 1rem; bottom: calc(100% + .5rem); width: min(26rem, calc(100vw - 2rem));
+    max-height: 60vh; overflow: auto; padding: .6rem .75rem; box-shadow: 0 6px 24px rgb(0 0 0 / .18);
+}
+.queue-list { list-style: none; margin: 0; padding: 0; }
+.queue-list li { display: flex; gap: .5rem; align-items: center; height: 46px; box-sizing: border-box; padding: .3rem .25rem; border-radius: 6px; }
+/* Where songs aren't drawn, the room they'd take; nothing more. */
+.queue-list li:empty { padding: 0; }
+.queue-list li.now { background: var(--bg); }
+.queue-list li.now .queue-title > span:first-child { font-weight: 700; color: var(--accent); }
+.queue-list li.dim { opacity: .55; }
+.queue-list .queue-title { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; text-align: left; color: var(--text); }
+.queue-list .queue-title > span { max-width: 100%; }
+.queue-list .queue-cover { width: 2.25rem; flex: none; border-radius: 4px; }
+/* Narrower, the right takes only the room its buttons need, and the volume folds into a button. */
+@media (max-width: 1100px) {
+    .player-bar { grid-template-columns: minmax(0, 1fr) minmax(13.5rem, 1.6fr) auto; }
+    .volume.folds > .volume-mute, .volume.folds > input[type=range] { display: none; }
+    .volume.folds > .volume-open { display: inline-grid; }
+}
+/* Narrower still, the playlist and lyrics buttons are left to the full-screen player. */
+@media (max-width: 900px) { .player-bar .fold { display: none; } }
+@media (max-width: 760px) {
+    /* On a phone it's one line: what's playing, and previous, play, next and stop. Anywhere else opens the full-screen
+       player, which has the rest; a line along the top shows how far the song has got. */
+    .player-space { height: 4.5rem; }
+    .player-bar { grid-template-columns: minmax(0, 1fr) auto auto; gap: .5rem; padding: .5rem .75rem; }
+    .player-art { width: 3rem; }
+    .player-track { pointer-events: none; }
+    .player-centre { display: contents; }
+    .player-centre .player-seek { display: none; }
+    .player-controls { grid-column: 2; grid-row: 1; gap: .15rem; }
+    .player-end { grid-column: 3; grid-row: 1; gap: 0; }
+    .player-controls, .player-end { position: relative; z-index: 1; }
+    .player-bar .hide-narrow { display: none; }
+    .player-open { display: block; position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: none; border-radius: 0; background: none; cursor: pointer; }
+    .player-progress { display: block; position: absolute; left: 0; right: 0; top: -1px; height: 3px; background: color-mix(in srgb, var(--text) 12%, transparent); pointer-events: none; }
+    .player-progress > span { display: block; height: 100%; background: var(--accent); transition: width .25s linear; }
+}
+
+/* The full-screen player: the cover large over a blur of itself, with lyrics or the queue beside it. */
+.now-playing {
+    position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; overflow: hidden;
+    background: var(--bg); color: var(--text); animation: np-in .25s ease-out;
+}
+.now-playing:focus { outline: none; }
+@keyframes np-in { from { opacity: 0; transform: translateY(2rem); } }
+.np-backdrop {
+    position: absolute; inset: -15%; background-size: cover; background-position: center;
+    filter: blur(70px) saturate(1.5); opacity: .6; transition: background-image .6s;
+}
+.np-shade {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 35%, transparent), color-mix(in srgb, var(--bg) 80%, transparent));
+}
+.np-head, .np-body { position: relative; }
+/* Three columns, the outer two equal, so where it's playing from is in the middle of the page whatever the buttons. */
+.np-head { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: .5rem; padding: .75rem 1rem; }
+.np-head-start, .np-head-end { display: flex; align-items: center; gap: .25rem; min-width: 0; }
+.np-head-end { justify-content: flex-end; }
+.np-from { max-width: min(36rem, 50vw); min-width: 0; text-align: center; font-size: .85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-from .muted { text-transform: uppercase; letter-spacing: .06em; font-size: .72rem; margin-right: .4rem; }
+.np-from a { color: var(--text); font-weight: 600; }
+.now-playing button.icon:hover:not(:disabled), .now-playing button.icon.on { background: color-mix(in srgb, var(--text) 12%, transparent); }
+.now-playing button.icon.on { color: var(--accent); }
+.np-body {
+    flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2.5rem;
+    padding: 0 2.5rem 2rem; max-width: 90rem; width: 100%; margin: 0 auto; box-sizing: border-box;
+}
+/* Beside the panel, the row is as tall as the cover and controls, and the panel fills it: its top level with the cover's, its foot with the volume's. */
+.np-body.with-panel { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-content: center; }
+.np-body.with-panel .np-panel { contain: size; }
+.np-main { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .9rem; min-height: 0; }
+.np-art { width: min(28rem, 100%, 48vh); }
+.np-art .cover { border: none; border-radius: 10px; box-shadow: 0 24px 60px rgb(0 0 0 / .45); }
+.np-visualiser { display: block; width: min(30rem, 100%); height: 3.5rem; margin-top: -.4rem; color: var(--accent); opacity: .85; }
+.np-info { width: min(30rem, 100%); min-width: 0; }
+.np-title { font-size: 1.6rem; font-weight: 700; line-height: 1.25; }
+.np-seek { width: min(30rem, 100%); }
+.np-controls { display: flex; gap: 1.25rem; align-items: center; }
+.np-controls button.icon { width: 2.75rem; height: 2.75rem; }
+.np-controls button.icon svg { width: 1.5rem; height: 1.5rem; }
+.np-controls button.icon.play { width: 4rem; height: 4rem; }
+.np-controls button.icon.play svg { width: 1.7rem; height: 1.7rem; }
+.np-volume input { width: 9rem; }
+.np-panel {
+    position: relative; min-height: 0; overflow: auto; border-radius: 14px; padding: 1rem 1.5rem;
+    background: color-mix(in srgb, var(--surface) 45%, transparent); backdrop-filter: blur(12px);
+}
+.np-queue .queue-list li.now { background: color-mix(in srgb, var(--text) 10%, transparent); }
+/* Lyrics sit flush beside the cover, with no box, fading out at the top and bottom. */
+.np-panel.np-lyrics { background: none; backdrop-filter: none; border-radius: 0; padding-left: 0; padding-right: 0;
+    mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent); }
+.np-lyrics { padding: 30vh 2rem; font-size: clamp(1.25rem, 2.2vw, 2rem); font-weight: 700; line-height: 1.35; scrollbar-width: none; }
+.np-lyrics::-webkit-scrollbar { display: none; }
+.np-lyrics .line { margin: .45em 0; opacity: .4; cursor: pointer; transition: opacity .35s, color .35s, transform .35s; transform-origin: left center; }
+.np-lyrics .line:hover { opacity: .75; }
+.np-lyrics .line.past { opacity: .6; }
+.np-lyrics .line.active { opacity: 1; color: var(--accent); transform: scale(1.03); }
+.np-lyrics .line.gap { opacity: .3; }
+.np-lyrics.plain { padding: 2rem; font-size: clamp(1.1rem, 1.6vw, 1.4rem); }
+.np-lyrics.plain .line { opacity: .9; cursor: default; transform: none; }
+.np-lyrics.plain .line.gap { min-height: .8em; }
+.np-note { font-size: 1rem; font-weight: 400; }
+.np-lyrics:has(.np-note:only-child), .np-lyrics:has(> .loading) { padding: 2rem; display: grid; place-items: center; text-align: center; }
+@media (max-width: 860px) {
+    /* On a phone: the panel takes the cover's place, above the controls. */
+    /* No room to centre it on the page: it takes what's between the buttons. */
+    .np-head { grid-template-columns: auto minmax(0, 1fr) auto; }
+    .np-from { max-width: none; }
+    .np-body { padding: 0 1rem 1.25rem; gap: 1rem; }
+    .np-body.with-panel { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; }
+    .np-body.with-panel .np-panel { order: -1; }
+    .np-body.with-panel .np-art, .np-body.with-panel .np-visualiser { display: none; }
+    .np-art { width: min(100%, 45vh); }
+    .np-lyrics { padding: 20vh 1rem; }
+    .np-title { font-size: 1.3rem; }
+}
+/* Between five buttons, the album's name alone. */
+@media (max-width: 640px) { .np-from .muted { display: none; } .np-head { padding: .6rem .5rem; gap: .25rem; } }
+@media (prefers-reduced-motion: reduce) {
+    .now-playing { animation: none; }
+    .np-lyrics .line { transition: none; }
+}
+
+/* Play and Listen buttons beside tracks and albums. */
+button.play-link { display: inline-flex; align-items: center; gap: .3rem; }
+button.play-link svg { width: .8rem; height: .8rem; fill: currentColor; }
+tr.playing td { background: var(--bg); }
+tr.playing td:nth-child(2) { color: var(--accent); font-weight: 600; }
+
+/* Listen now: one row per track, with how long it's kept. */
+.listen-item { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: .75rem; align-items: center; padding: .6rem 1rem; }
+.listen-item + .listen-item { border-top: 1px solid var(--border); }
+.listen-status { gap: .4rem .75rem; margin-top: .4rem; flex-wrap: wrap; }
+.listen-actions { display: flex; gap: .3rem; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 640px) {
+    .listen-item { grid-template-columns: 2.5rem minmax(0, 1fr); }
+    .listen-actions { grid-column: 1 / -1; justify-content: flex-start; }
+}
+
+/* Loading: a spinner beside what's loading. */
+.loading { display: flex; align-items: center; justify-content: center; gap: .6rem; padding: 2rem; color: var(--muted); }
+.loading.inline { display: inline-flex; padding: 0; justify-content: flex-start; }
+.loading .spinner { width: 1rem; height: 1rem; color: var(--accent); }
+
+/* The Log page's level toggles, in the colours of the entries they show. */
+/* Each tick box is given its colour: currentColor leaves them black. The warning's edge is the meter's brighter amber,
+   as the darker text colour looks brown against the light tint. */
+.toggle.level.information input { accent-color: var(--accent); }
+.toggle.level.warning input { accent-color: var(--partial); }
+.toggle.level.error input { accent-color: var(--missing); }
+.toggle.level.information:has(input:checked) { border-color: var(--border); color: var(--text); background: var(--surface); }
+.toggle.level.warning:has(input:checked) { border-color: var(--partial-fill); color: var(--partial); background: var(--partial-bg); }
+.toggle.level.error:has(input:checked) { border-color: var(--missing); color: var(--missing); background: var(--missing-bg); }
+.toggle.level:not(:has(input:checked)) { opacity: .65; }
+
+/* The library's ownership bar: owned, partly owned and covered segments over the missing colour. */
+.segmented-meter { display: flex; }
+.segmented-meter > span { flex: none; }
+.segmented-meter > .complete { background: var(--owned-fill); }
+.segmented-meter > .partial { background: var(--partial-fill); }
+.segmented-meter > .covered { background: var(--covered-fill); }
+.segmented-meter > span + span { box-shadow: -1px 0 0 var(--surface); }
+.segmented-meter.none { background: var(--border); }
+.legend { display: flex; gap: 1rem; flex-wrap: wrap; margin: -.25rem 0 1rem; }
+.legend span { display: inline-flex; align-items: center; gap: .35rem; }
+.legend i { width: .7rem; height: .7rem; border-radius: 3px; display: inline-block; }
+.legend .complete { background: var(--owned-fill); }
+.legend .partial { background: var(--partial-fill); }
+.legend .covered { background: var(--covered-fill); }
+.legend .missing { background: var(--missing-fill); }
+
+/* A scan's files on the Activity page: the file while it's read, the song once it's matched. */
+.scan-files-head { justify-content: space-between; margin-bottom: .35rem; }
+.scan-files-head .link { display: inline-flex; align-items: center; gap: .3rem; }
+.sort-icon { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+/* Rows are one height, so the list can be scrolled without drawing every file. */
+.scan-files { max-height: min(32rem, 70vh); overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
+.scan-file {
+    display: grid; grid-template-columns: 2.25rem minmax(0, 1fr) auto; gap: .6rem; align-items: center;
+    height: 52px; box-sizing: border-box; padding: 0 .6rem; border-bottom: 1px solid var(--border);
+}
+/* The cover's link, not the To review chip beside it. */
+.scan-file > a:not(.badge) { display: block; line-height: 0; }
+.scan-file .cover { width: 2.25rem; }
+.scan-file-icon { width: 2.25rem; height: 2.25rem; display: grid; place-items: center; color: var(--muted); }
+.scan-file-icon .spinner { width: 1rem; height: 1rem; color: var(--accent); }
+.scan-file-icon svg { width: 1.2rem; height: 1.2rem; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
+.scan-file-text { min-width: 0; }
+.scan-file.matched.fresh { animation: matched .6s ease-out; }
+@keyframes matched { from { background: var(--owned-bg); } to { background: transparent; } }
+
+/* Square icon buttons beside albums and tracks: play, listen, get, queue, ignore. Their titles say what they do. */
+.icon-button {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem; vertical-align: middle;
+    min-width: 2rem; height: 2rem; padding: 0; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+}
+.icon-button svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.icon-button svg .fill { fill: currentColor; stroke: none; }
+/* After .icon-button's own display, or buttons meant to go on a phone stay. */
+@media (max-width: 640px) { .icon-button.hide-narrow { display: none; } }
+.icon-button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.icon-button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.icon-button.primary:hover:not(:disabled) { color: var(--accent-text); filter: brightness(1.1); }
+.icon-button.large { min-width: 2.5rem; height: 2.5rem; }
+.icon-button.large svg { width: 1.2rem; height: 1.2rem; }
+.icon-button:has(span:not(.spinner)) { padding: 0 .9rem 0 .7rem; }
+.icon-button.done { border-color: var(--owned); color: var(--owned); }
+.icon-button .spinner { width: .9rem; height: .9rem; }
+/* Buttons that open a menu are spaced like any other. */
+td.actions > :is(.icon-button, .queue-menu, .move-menu) + :is(.icon-button, .queue-menu, .move-menu),
+td.actions > :is(.icon-button, .queue-menu, .move-menu) + .badge, td.actions > .badge + :is(.icon-button, .queue-menu, .move-menu) { margin-left: .3rem; }
+.album-actions { gap: .4rem; }
+.track-list col.icons-2-col { width: 5.5rem; }
+.track-list col.icons-3-col { width: 9.5rem; }
+.track-list col.icons-4-col { width: 12.5rem; }
+/* On a phone a playlist song keeps play, move and take out. */
+@media (max-width: 640px) { .track-list col.icons-4-col { width: 7.75rem; } }
+/* Room between the last button and the card's edge. */
+.table tr > td:last-child.actions { padding-right: 1rem; }
+
+/* Artwork on its way shimmers; the placeholder icon shows only when there's none. */
+.cover.pending svg, .cover.loaded svg { display: none; }
+.cover.pending img { opacity: 0; }
+/* "blank", not "empty": that's the padded "nothing here" card. */
+.cover.blank img { display: none; }
+.cover.loaded img { animation: fade-in .25s ease-out; }
+.cover.pending {
+    background: linear-gradient(100deg, var(--bg) 30%, var(--border) 50%, var(--bg) 70%) 0 0 / 300% 100%;
+    animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+/* Something on its way: a blank where it'll go, shimmering like a cover does. */
+.placeholder {
+    display: inline-block; vertical-align: middle; height: .85em; width: 60%; max-width: 22rem; border-radius: 4px;
+    background: linear-gradient(100deg, var(--bg) 30%, var(--border) 50%, var(--bg) 70%) 0 0 / 300% 100%;
+    animation: shimmer 1.4s linear infinite;
+}
+.placeholder.short { width: 2.5rem; }
+.placeholder.badge-size { width: 4.5rem; height: 1.2em; border-radius: 999px; }
+.placeholder.line { display: block; width: 14rem; margin-top: .45rem; }
+.placeholder.title { height: 1.6em; width: 16rem; max-width: 80%; }
+@media (prefers-reduced-motion: reduce) {
+    .cover.pending, .placeholder { animation: none; }
+    .cover.loaded img { animation: none; }
+}
+/* Buttons that wait for the page to arrive, together: greyed until then. */
+fieldset.row { border: 0; margin: 0; padding: 0; min-width: 0; }
+
+/* Choices with a highlight that slides to the one picked; owned and missing wear their colours. */
+.segmented.slider { position: relative; display: inline-grid; grid-template-columns: repeat(var(--count), 1fr); }
+.segmented.slider button { position: relative; z-index: 1; transition: color .2s; white-space: nowrap; }
+.segmented.slider button + button { border-left: none; }
+.segmented.slider button.selected { background: none; }
+.segmented.slider .thumb {
+    position: absolute; top: 0; bottom: 0; left: 0; width: calc(100% / var(--count)); border-radius: 999px; background: var(--bg);
+    transform: translateX(calc(var(--index) * 100%)); transition: transform .25s ease, background-color .25s;
+}
+.segmented.ownership.owned .thumb { background: var(--owned-bg); }
+.segmented.ownership.owned button.selected { color: var(--owned); }
+.segmented.ownership.missing .thumb { background: var(--missing-bg); }
+.segmented.ownership.missing button.selected { color: var(--missing); }
+@media (prefers-reduced-motion: reduce) { .segmented.slider .thumb { transition: none; } }
+.ownership-busy { width: 1rem; height: 1rem; color: var(--accent); opacity: 0; transition: opacity 0s; }
+.ownership-busy.on { opacity: 1; transition-delay: .12s; }
+/* The page itself doesn't take part in transitions, only the tiles, so the rest changes at once without a flicker. */
+:root { view-transition-name: none; }
+::view-transition-group(*) { animation-duration: .28s; animation-timing-function: ease; }
+::view-transition-new(*):only-child { animation: fade-in .2s ease-out; }
+::view-transition-old(*):only-child { animation: fade-out .15s ease-in forwards; }
+@keyframes fade-out { to { opacity: 0; } }
+
+/* A dialog over the page, for questions that need an answer before anything happens. */
+.dialog-backdrop {
+    position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 1rem;
+    background: rgb(0 0 0 / .55); animation: fade-in .15s ease-out;
+}
+.dialog {
+    width: min(34rem, 100%); max-height: calc(100vh - 2rem); overflow: auto; padding: 1.25rem 1.4rem;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 12px 40px rgb(0 0 0 / .35);
+}
+.dialog:focus { outline: none; }
+.dialog h2 { margin: 0 0 .75rem; font-size: 1.15rem; }
+.dialog p { margin: .5rem 0; }
+.dialog-list { margin: .25rem 0 .75rem; padding-left: 1.2rem; }
+.dialog-list code { overflow-wrap: anywhere; }
+.dialog-choice {
+    display: flex; gap: .6rem; align-items: flex-start; padding: .6rem .75rem; margin: .4rem 0;
+    border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+}
+.dialog-choice:has(input:checked) { border-color: var(--accent); }
+.dialog-choice.disabled { opacity: .6; cursor: default; }
+.dialog-choice input { margin-top: .2rem; }
+.dialog-choice > span { display: flex; flex-direction: column; gap: .2rem; }
+.dialog-buttons { justify-content: flex-end; margin-top: 1rem; margin-bottom: 0; }
+/* A link that reads as text until pointed at, such as a song's title in an album's track list. */
+a.plain { color: inherit; }
+a.plain:hover { color: var(--accent); }
+
+/* A track page's files, and the tags each has. */
+.track-file { padding: .75rem 1rem; margin-bottom: .75rem; }
+.track-file > code { display: block; overflow-wrap: anywhere; margin-bottom: .3rem; }
+.file-tags { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .2rem 1rem; margin: .6rem 0 0; font-size: .9rem; }
+.file-tags dt { color: var(--muted); }
+.file-tags dd { margin: 0; overflow-wrap: anywhere; }
+/* On a phone, each tag's name over its value, so long IDs keep to a line. */
+@media (max-width: 640px) {
+    .file-tags { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .file-tags dt { font-size: .8rem; margin-top: .4rem; }
+}
+
+/* Formatting: where each part of a file's metadata comes from. */
+.notice.warning { border-color: var(--partial); background: var(--partial-bg); color: var(--text); margin: .25rem 0 .75rem; }
+.notice.passed { border-color: var(--owned); background: var(--owned-bg); color: var(--text); margin: .25rem 0 .75rem; }
+.format-choices { display: grid; gap: .5rem; margin: .75rem 0; }
+.format-choices label { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 13rem); gap: .75rem; align-items: center; }
+.format-choices label > span { display: flex; flex-direction: column; }
+.format-choices select { width: 100%; }
+@media (max-width: 480px) { .format-choices label { grid-template-columns: 1fr; gap: .25rem; } }
+button.danger { background: var(--missing); border-color: var(--missing); color: #fff; }
+button.danger:hover:not(:disabled) { filter: brightness(1.1); }
+button .spinner { width: .85rem; height: .85rem; vertical-align: -2px; margin-right: .3rem; }
+
+/* A remove button in the corner of a library tile, shown on hover or focus. */
+.tile-wrap { position: relative; display: grid; min-width: 0; }
+.tile-remove { position: absolute; top: .4rem; right: .4rem; opacity: 0; transition: opacity .15s; }
+.tile-wrap:hover .tile-remove, .tile-wrap:focus-within .tile-remove { opacity: 1; }
+@media (hover: none) { .tile-remove { opacity: 1; } }
+.icon-button.remove:hover:not(:disabled) { color: var(--missing); border-color: var(--missing); }
+
+/* The library's sort: what by, and which way. */
+/* Toolbar controls share one height, so a row of them lines up. */
+.toolbar { --control: 2.25rem; }
+/* Blazor focuses the heading after navigating, for screen readers; it needn't show. */
+h1:focus { outline: none; }
+.toolbar input[type=search], .toolbar select, .toolbar .icon-button, .toolbar > button, .toolbar .segmented { height: var(--control); box-sizing: border-box; }
+.toolbar .icon-button { min-width: var(--control); }
+.toolbar .segmented button { padding-top: 0; padding-bottom: 0; }
+.toolbar .toggle { height: var(--control); box-sizing: border-box; display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
+.toolbar.one-line select { min-width: 0; max-width: 11rem; }
+svg.flip { transform: scaleY(-1); }
+.icon-button.on { border-color: var(--accent); color: var(--accent); }
+
+/* Sorting: a button that opens the ways to sort, and one that reverses the order. */
+.sort-menu { position: relative; display: inline-flex; gap: .3rem; flex: none; }
+.sort-menu svg.flip { transform: scaleY(-1); }
+.menu-backdrop { position: fixed; inset: 0; z-index: 30; }
+.menu {
+    position: absolute; top: calc(100% + .3rem); left: 0; z-index: 31; min-width: 11rem; padding: .25rem;
+    display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / .3);
+}
+.menu button { border: none; background: none; text-align: left; padding: .45rem .7rem; border-radius: 6px; white-space: nowrap; }
+.menu button:hover { background: var(--bg); }
+.menu button.selected { color: var(--accent); font-weight: 600; }
+.menu.right { left: auto; right: 0; }
+.menu hr { border: none; border-top: 1px solid var(--border); margin: .25rem 0; }
+
+/* The account button at the top right, and its menu. */
+.account-menu { position: relative; display: inline-flex; margin-left: .5rem; }
+.account-button { border-radius: 50%; padding: 0; width: 2.1rem; height: 2.1rem; display: inline-flex; align-items: center; justify-content: center; }
+.avatar { font-weight: 600; font-size: .9rem; }
+/* Settings, beside the account: a gear the size of the account button, filled in while you're there. */
+.topbar-icon { width: 2.1rem; height: 2.1rem; flex: none; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: var(--muted); }
+.topbar-icon:hover { color: var(--text); background: var(--bg); text-decoration: none; }
+.topbar-icon.active { color: var(--text); background: var(--bg); }
+.topbar-icon svg { width: 1.2rem; height: 1.2rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.menu a { color: var(--text); text-decoration: none; padding: .45rem .7rem; border-radius: 6px; white-space: nowrap; }
+.menu a:hover { background: var(--bg); }
+.menu-note { display: flex; flex-direction: column; padding: .45rem .7rem; max-width: 16rem; }
+.dialog-choice.dim { opacity: .55; }
+
+/* The scan button: scanning for changes, and a menu of the rest. */
+.split-button { position: relative; display: inline-flex; }
+.split-button > button:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.split-button > button.more { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: 1px solid rgb(0 0 0 / .25); padding-inline: .45rem; display: inline-flex; align-items: center; }
+.split-button > button.more svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.scan-menu { min-width: 17rem; }
+.scan-menu button, .scan-menu a { display: flex; flex-direction: column; gap: .1rem; color: var(--text); text-decoration: none; padding: .45rem .7rem; border-radius: 6px; }
+.scan-menu a:hover { background: var(--bg); }
+.scan-menu .small { white-space: normal; }
+
+/* The library's toolbar keeps to one line; when it runs short of room the filter box becomes a button that opens it
+   below, and only on narrow screens does the row wrap. */
+.library-bar { container-type: inline-size; margin: 1rem 0; }
+.library-bar .toolbar { margin: 0; }
+.toolbar.one-line { flex-wrap: nowrap; }
+.toolbar.one-line > * { flex: none; }
+.toolbar.one-line .filter { flex: 1 1 12rem; min-width: 8rem; max-width: 420px; }
+.toolbar.one-line .count { margin-left: auto; white-space: nowrap; }
+.filter-toggle, .filter-drop { display: none; }
+.filter-drop { margin-top: .6rem; }
+.filter-drop input[type=search] { max-width: none; }
+@container (max-width: 760px) {
+    .toolbar.one-line .filter { display: none; }
+    .toolbar.one-line .filter-toggle { display: inline-flex; }
+    .filter-drop { display: block; }
+}
+@container (max-width: 560px) {
+    .toolbar.one-line { flex-wrap: wrap; }
+}
+
+/* The playlists' toolbar on a phone: the buttons on one line with only their icons, the filter box on the next. */
+@media (max-width: 640px) {
+    .toolbar.one-line.playlists-bar { flex-wrap: wrap; gap: .5rem .4rem; }
+    .toolbar.one-line.playlists-bar .filter { display: block; order: 1; flex: 1 1 100%; max-width: none; }
+    .playlists-bar .icon-button > span:not(.spinner) { display: none; }
+    .playlists-bar .icon-button:has(span:not(.spinner)) { padding: 0; }
+    .playlists-bar .segmented button { padding-left: .5rem; padding-right: .5rem; font-size: .875rem; }
+    .playlists-bar .spacer { display: none; }
+    .playlists-bar > .icon-button.primary { margin-left: auto; }
+}
+
+/* Recent artists and searches on the Search page, before anything's typed. */
+.recent-artists { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); margin: .75rem 0 1.5rem; }
+@media (max-width: 640px) { .recent-artists { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: .6rem; } .recent-artists .tile { padding: .5rem; } }
+.recent-searches { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0 1.5rem; }
+.chip {
+    display: inline-flex; align-items: center; gap: .25rem; height: 2.25rem; box-sizing: border-box; max-width: 100%;
+    padding: 0 .3rem 0 .8rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
+    transition: border-color .15s;
+}
+.chip:hover { border-color: var(--accent); }
+.chip a { display: inline-flex; align-items: center; gap: .45rem; min-width: 0; color: var(--text); text-decoration: none; }
+.chip a svg { width: .95rem; height: .95rem; flex: none; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; }
+.chip-remove {
+    display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; flex: none; padding: 0;
+    border: none; border-radius: 50%; background: none; color: var(--muted); cursor: pointer;
+}
+.chip-remove svg { width: .85rem; height: .85rem; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.chip-remove:hover { color: var(--missing); background: var(--missing-bg); }
+.toolbar.one-line .search-box { max-width: none; }
+/* The search page has more to fit: its box becomes a button sooner, and when even the rest won't fit on one line, the
+   box takes the first line to itself and the rest wrap below it, rather than a lone button. */
+@container (max-width: 900px) {
+    .search-bar .toolbar.one-line .filter { display: none; }
+    .search-bar .toolbar.one-line .filter-toggle { display: inline-flex; }
+    .search-bar .filter-drop { display: block; }
+}
+@container (max-width: 760px) {
+    .search-bar .toolbar.one-line { flex-wrap: wrap; }
+    .search-bar .toolbar.one-line .filter { display: block; flex: 1 1 100%; max-width: none; }
+    .search-bar .toolbar.one-line .filter-toggle, .search-bar .filter-drop { display: none; }
+    /* It would wrap to a line of its own; "Searching MusicBrainz…" below says as much. */
+    .search-bar .ownership-busy { display: none; }
+}
+.search-note { margin-bottom: .5rem; }
+
+/* Review's toolbar has more buttons: its filter box becomes a button sooner, then the buttons drop their names and keep
+   to their icons, and only on the narrowest screens does the row wrap. */
+.review-bar .toolbar.one-line .filter { max-width: 360px; }
+@container (max-width: 860px) {
+    .review-bar .toolbar.one-line .filter { display: none; }
+    .review-bar .toolbar.one-line .filter-toggle { display: inline-flex; }
+    .review-bar .filter-drop { display: block; }
+}
+@container (max-width: 620px) {
+    .review-bar .toolbar.one-line { flex-wrap: nowrap; gap: .5rem; }
+    .review-bar .icon-button > span:not(.spinner) { display: none; }
+    .review-bar .icon-button:has(span:not(.spinner)) { padding: 0; }
+}
+@container (max-width: 330px) {
+    .review-bar .toolbar.one-line { flex-wrap: wrap; }
+}
+
+/* Settings: its sections down the left, or across the top on narrow screens. */
+.settings-page { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.settings-nav { display: flex; flex-direction: column; gap: .15rem; position: sticky; top: 4.5rem; }
+.settings-nav a { padding: .45rem .75rem; border-radius: 6px; color: var(--muted); text-decoration: none; }
+.settings-nav a:hover { background: var(--surface); color: var(--text); }
+.settings-nav a.active { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
+.settings-body > :first-child { margin-top: 0; }
+@media (max-width: 720px) {
+    .settings-page { grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+    /* Every section in sight, on as many lines as it takes. */
+    .settings-nav { flex-direction: row; flex-wrap: wrap; position: static; }
+    .settings-nav a { padding: .4rem .6rem; }
+    .settings-nav a.active { box-shadow: inset 0 -2px 0 var(--accent); }
+}
+
+/* Signing in, and the first run's setup */
+.auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem 1rem; box-sizing: border-box; }
+.auth-card {
+    width: min(24rem, 100%); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.5rem; display: flex; flex-direction: column; gap: .25rem; box-sizing: border-box;
+}
+.auth-card .brand { color: var(--accent); margin-bottom: .5rem; }
+.auth-card h1 { margin-bottom: .25rem; }
+.auth-card .field input { max-width: none; box-sizing: border-box; }
+.auth-card > button.primary { margin-top: .75rem; justify-content: center; }
+.auth-card code { overflow-wrap: anywhere; }
+.auth-check { display: flex; gap: .6rem; align-items: flex-start; margin: .6rem 0; cursor: pointer; }
+.auth-check input { margin-top: .25rem; }
+.auth-check > span { display: flex; flex-direction: column; gap: .2rem; }
+
+/* Security and webhooks */
+.panel-body { padding: .4rem 1.1rem 1rem; }
+.panel-body h3 { font-size: .95rem; margin: 1.2rem 0 .25rem; }
+.scope-list { display: flex; flex-wrap: wrap; gap: .3rem; }
+.secret-box { display: flex; align-items: center; gap: .5rem; padding: .5rem .5rem .5rem .75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); }
+.secret-box code { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: .85rem; }
+.table-scroll { overflow-x: auto; }
+
+/* Settings → Appearance. Each swatch shows its colour's accent in light and dark, half each. */
+.appearance { display: grid; gap: .6rem; padding: 1rem 1.1rem 1.2rem; max-width: 40rem; }
+.appearance .field-label:not(:first-child) { margin-top: .6rem; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: .5rem; }
+.swatch {
+    display: flex; align-items: center; gap: .6rem; padding: .55rem .7rem; font: inherit; color: var(--text); cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.swatch:hover { border-color: var(--muted); }
+.swatch.selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); font-weight: 600; }
+.swatch-dot {
+    width: 1.5rem; height: 1.5rem; flex: none; border-radius: 50%; border: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--light) 50%, var(--dark) 50%);
+}
+.mode-choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: .5rem; }
+
+/* Settings → Help: the guide, as written in docs/guide. */
+.help { padding: 1rem 1.4rem 1.5rem; }
+.help-nav { margin-bottom: .5rem; }
+.markdown { max-width: 48rem; }
+.markdown h1 { font-size: 1.5rem; margin: .25rem 0 .75rem; }
+.markdown h2 { font-size: 1.15rem; margin: 1.6rem 0 .5rem; }
+.markdown h3 { font-size: 1rem; margin: 1.2rem 0 .4rem; }
+.markdown p, .markdown li { line-height: 1.6; }
+.markdown code { font-size: .88em; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: .05rem .3rem; }
+.markdown pre { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: .75rem 1rem; overflow-x: auto; }
+.markdown pre code { background: none; border: none; padding: 0; }
+.markdown table { border-collapse: collapse; width: 100%; margin: .5rem 0 1rem; font-size: .93rem; display: block; overflow-x: auto; }
+.markdown th, .markdown td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.markdown th { color: var(--muted); font-weight: 600; }
+
+/* The first run's setup: full screen, a step at a time, with the steps numbered along the bottom. */
+.setup-page { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+.setup-brand { display: flex; align-items: center; gap: .5rem; font-weight: 700; font-size: 1.1rem; padding: 1rem 1.25rem 0; }
+.setup-main { flex: 1; width: 100%; max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem 2rem; box-sizing: border-box; }
+.setup-main > .muted:first-of-type { margin-top: 0; max-width: 46rem; }
+.setup-admin { display: grid; gap: .75rem; max-width: 28rem; padding: 1rem 1.1rem; }
+.setup-card, .setup-scan { display: grid; gap: .6rem; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.setup-card h2 { margin: 0; }
+.setup-card p, .setup-scan p { margin: 0; }
+.setup-scan .error { max-width: none; white-space: normal; }
+.setup-nav {
+    position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: .75rem;
+    padding: .7rem 1rem; background: var(--surface); border-top: 1px solid var(--border);
+}
+.setup-back, .setup-next { flex: none; min-width: 5.5rem; }
+.setup-dots { flex: 1; display: flex; justify-content: center; gap: .25rem; list-style: none; margin: 0; padding: 0; min-width: 0; }
+.setup-dot {
+    display: flex; flex-direction: column; align-items: center; gap: .2rem; padding: .2rem .45rem; font: inherit;
+    background: none; border: none; color: var(--muted); cursor: pointer;
+}
+.setup-dot:disabled { cursor: default; }
+.setup-dot-name { font-size: .75rem; }
+.setup-number {
+    display: inline-grid; place-items: center; width: 1.9rem; height: 1.9rem; border-radius: 50%; flex: none;
+    background: var(--bg); border: 1px solid var(--border); font-size: .85rem; font-weight: 600; color: var(--text);
+    transition: background .15s, border-color .15s;
+}
+.setup-dot:not(:disabled):hover .setup-number { border-color: var(--accent); }
+.setup-dot.passed .setup-number { border-color: var(--accent); color: var(--accent); }
+.setup-dot.current { color: var(--text); }
+.setup-dot.current .setup-number { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+@media (max-width: 600px) {
+    .setup-dot-name { display: none; }
+    .setup-dot { padding: .2rem .1rem; }
+    .setup-number { width: 1.7rem; height: 1.7rem; }
+    .setup-back, .setup-next { min-width: 0; }
+}
+.markdown td code { white-space: nowrap; }
+.setup-body .error { max-width: none; white-space: normal; }
+
+/* Settings → About. */
+.about { padding: 1.2rem 1.4rem 1.4rem; max-width: 44rem; }
+.about-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.2rem; }
+.about-head h2 { margin: 0; font-size: 1.5rem; }
+.about-head p { margin: .2rem 0 0; }
+.about-logo { width: 4rem; height: 4rem; }
+.about-facts { display: grid; grid-template-columns: max-content 1fr; gap: .45rem 1.2rem; margin: 0 0 1.2rem; }
+.about-facts dt { color: var(--muted); }
+.about-facts dd { margin: 0; overflow-wrap: anywhere; }
+.about-links { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.2rem; }
+.about h3 { font-size: 1rem; margin: 0 0 .3rem; }
+@media (max-width: 520px) { .about-facts { grid-template-columns: 1fr; gap: .1rem; } .about-facts dd { margin-bottom: .5rem; } }
+
+/* General settings: cards of evenly spaced lines, each the same height whether or not it holds a number. */
+.settings-card { padding: .75rem 1rem; display: flex; flex-direction: column; gap: .5rem; }
+.settings-card > .muted.small { margin-top: -.35rem; }
+.settings-card > .dialog-choice { margin: 0; }
+.setting-line { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; min-height: 2.25rem; }
+
+/* A whole number with − and + either side, a little shorter than a line, without the browser's own arrows. */
+.stepper {
+    display: inline-flex; align-items: stretch; height: 1.9rem; border: 1px solid var(--border); border-radius: 999px;
+    background: var(--surface); overflow: hidden; vertical-align: middle;
+}
+.stepper:focus-within { border-color: var(--accent); }
+.stepper button {
+    font: inherit; border: none; background: none; color: var(--muted); width: 1.75rem; padding: 0; cursor: pointer; line-height: 1;
+}
+.stepper button:hover:not(:disabled) { color: var(--text); background: var(--bg); }
+.stepper button:disabled { opacity: .35; cursor: default; }
+.stepper input[type=number] {
+    border: none; border-radius: 0; padding: 0; background: none; text-align: center; font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield; appearance: textfield;
+}
+.stepper input[type=number]:focus { outline: none; }
+.stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* The missing view's kinds of release: a row each, with a choice of Show, New songs only or Hide. */
+.release-kinds { gap: 0; }
+.release-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem 1rem; padding: .4rem 0; }
+.release-row + .release-row { border-top: 1px solid var(--border); }
+.release-name { display: inline-flex; align-items: center; gap: .4rem; font-weight: 500; }
+/* What a kind takes in, on hover or focus (a tap, on a phone). */
+.info {
+    position: relative; display: inline-grid; place-items: center; width: 1rem; height: 1rem; flex: none; border-radius: 50%;
+    border: 1px solid var(--border); color: var(--muted); font: italic 600 .65rem/1 Georgia, serif; cursor: help;
+}
+.info:hover, .info:focus-visible { color: var(--text); border-color: var(--muted); outline: none; }
+.info::after {
+    content: attr(data-tip); position: absolute; left: -.6rem; bottom: calc(100% + .4rem); z-index: 5;
+    width: max-content; max-width: 14rem; padding: .35rem .55rem; border-radius: 6px; background: var(--text); color: var(--surface);
+    font: 400 .78rem/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; white-space: normal; text-align: left;
+    opacity: 0; pointer-events: none; transition: opacity .12s;
+}
+.info:hover::after, .info:focus::after { opacity: 1; }
+.release-row .segmented { flex: none; font-size: .85rem; }
+.release-row .segmented button { padding: .25rem .75rem; }
+.segmented.showing.show .thumb { background: var(--owned-bg); }
+.segmented.showing.show button.selected { color: var(--owned); }
+.segmented.showing.newsongsonly .thumb { background: var(--covered-bg); }
+.segmented.showing.newsongsonly button.selected { color: var(--covered); }
+.segmented.showing.hide .thumb { background: var(--bg); }
+.release-kinds > .link { align-self: flex-start; margin-top: .5rem; }
+/* An artist's own choices: wide enough for each kind's choices beside its name, as in Settings. */
+.showing-dialog { width: min(44rem, 100%); }
+@media (max-width: 640px) {
+    .release-row { flex-direction: column; align-items: stretch; }
+    .release-row .segmented { align-self: stretch; }
+}
+
+/* While the server works out the library's lists for the first time after starting. */
+.loading > span:last-child { max-width: 36rem; text-align: center; }
+.preparing { display: inline-flex; align-items: center; gap: .4rem; }
+.preparing .spinner { width: .9rem; height: .9rem; color: var(--accent); }
+
+/* A control held while the page loads: still there to read, plainly not ready. */
+.segmented.disabled { opacity: .6; }
+.segmented button:disabled { opacity: 1; cursor: default; }
+input[type=search]:disabled { opacity: .6; }
+
+/* Choosing a cover: every release's, grouped by release, as a grid of pictures to pick from. */
+.dialog.cover-dialog { width: min(52rem, 100%); }
+.cover-upload { align-items: center; gap: .75rem; margin: .5rem 0 .25rem; }
+.cover-upload input[type=file] { display: none; }
+.cover-upload label.button { cursor: pointer; }
+.cover-choices h3 { font-size: .95rem; margin: 1rem 0 .4rem; }
+.cover-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: .5rem; }
+.cover-choice {
+    display: flex; flex-direction: column; align-items: stretch; gap: .25rem; padding: .4rem; text-align: left;
+    background: none; border: 2px solid transparent; border-radius: 8px; font: inherit; color: inherit; height: auto; line-height: 1.3;
+}
+.cover-choice:hover { border-color: var(--border); background: var(--bg); }
+.cover-choice.selected { border-color: var(--accent); }
+.cover-choice-title { font-size: .85rem; display: flex; gap: .3rem; align-items: center; flex-wrap: wrap; overflow-wrap: anywhere; }
+.cover-choice .muted.small { font-size: .75rem; overflow-wrap: anywhere; }
+/* No picture there: nothing to choose. */
+.cover-choice:has(.cover.blank) { display: none; }
+
+/* A song's lyrics on its page: folded away until opened, synced lines with when they're sung. */
+.lyrics { padding: .6rem 1rem; margin: .5rem 0 0; }
+.lyrics summary { cursor: pointer; font-weight: 500; }
+.lyrics-lines { margin: .75rem 0 .5rem; display: grid; gap: .15rem; line-height: 1.5; }
+.lyrics-line { display: flex; gap: .75rem; align-items: baseline; }
+.lyrics-line.gap { min-height: .75rem; }
+.lyrics-time { font-variant-numeric: tabular-nums; min-width: 2.6rem; }
+
+/* Playlists: a tree of folders, each playlist with a small cover; four album covers in a square once it has them. */
+.playlist-mosaic { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.playlist-mosaic img { position: static; width: 100%; height: 100%; }
+.playlist-mosaic.pending img { opacity: 0; }
+.playlist-mosaic.loaded img { animation: fade-in .25s ease-out; }
+.cover.small { width: 2.75rem; flex: none; }
+.playlist-tree { padding: .35rem; }
+.playlist-list { list-style: none; margin: 0; padding: 0; }
+.playlist-list .playlist-list { padding-left: 1.4rem; }
+.playlist-row { display: flex; align-items: center; gap: .5rem; padding: .3rem .4rem; border-radius: var(--radius); }
+.playlist-row:hover { background: var(--bg); }
+.playlist-link { display: flex; align-items: center; gap: .75rem; flex: 1; min-width: 0; color: inherit; }
+.playlist-link:hover { text-decoration: none; }
+.playlist-text { display: flex; flex-direction: column; min-width: 0; }
+.folder-toggle { display: flex; align-items: center; gap: .5rem; padding: .25rem 0; color: inherit; background: none; border: 0; min-width: 0; }
+.folder-toggle svg { width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.folder-toggle .folder-icon { width: 1.4rem; height: 1.4rem; color: var(--accent); }
+/* A drawn arrow, not the bordered one Activity's are: none of their borders. */
+.folder-toggle .chevron { border: 0; transition: transform .15s ease-out; }
+.folder-toggle .chevron.open { transform: rotate(90deg); }
+.playlist-folder > .playlist-row .icon-button { opacity: .6; }
+.playlist-folder > .playlist-row:hover .icon-button, .playlist-folder > .playlist-row .icon-button:focus-visible { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .folder-toggle .chevron { transition: none; } }
+
+/* Adding to a playlist: a new one at the top, then the rest, most recently changed first. */
+.playlist-picker { width: min(30rem, 100%); }
+.picker-list { list-style: none; margin: .25rem 0 0; padding: 0; max-height: 18rem; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+.picker-list li + li { border-top: 1px solid var(--border); }
+.picker-list button { display: flex; align-items: baseline; gap: .25rem; width: 100%; padding: .55rem .75rem; text-align: left; background: none; border: 0; border-radius: 0; color: inherit; }
+.picker-list button:hover:not(:disabled) { background: var(--bg); }
+.picker-list .spacer-left { margin-left: auto; white-space: nowrap; }
+.playlist-picker .row input { flex: 1; min-width: 0; }
+
+/* Rows and results that arrive after the page has shown, as MusicBrainz answers, fade in rather than jump. */
+@keyframes arrive { from { opacity: 0; transform: translateY(4px); } }
+.arrives { animation: arrive .35s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .arrives { animation: none; } }
+
+/* The Library page's tabs: Browse and Playlists. */
+.page-tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--border); margin: -.25rem 0 1rem; }
+.page-tabs a { padding: .5rem .9rem; color: var(--muted); text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 600; }
+.page-tabs a:hover { color: var(--text); }
+.page-tabs a.active { color: var(--text); border-bottom-color: var(--accent); }
+
+/* Pins: on a square, shown on hover like other tile buttons, and always once pinned; in a list, faint until wanted. */
+.tile-pin { left: .4rem; right: auto; }
+.tile-pin.pinned, .row-pin.pinned { opacity: 1; color: var(--accent); }
+.row-pin { opacity: .45; }
+.playlist-row:hover .row-pin, .row-pin:focus-visible { opacity: 1; }
+.pinned-row { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(150px, 180px); overflow-x: auto; padding-bottom: .25rem; }
+.tiles .playlist-mosaic, .tiles .cover { width: 100%; }
+.playlist-cover-preview { width: min(14rem, 100%); margin: 0 auto 1rem; }
+.playlist-cover-preview img.cover { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+
+/* A song's lyrics tools: a line saying what it has, and dialogs to view, edit and choose them. */
+.lyrics-actions { flex-wrap: wrap; gap: .5rem; margin-left: auto; }
+.lyrics-status { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin: .6rem 0 0; }
+.lyrics-status + .lyrics-status { margin-top: .3rem; }
+.dialog.lyrics-dialog { width: min(42rem, 100%); }
+.lyrics-view { max-height: min(60vh, 34rem); overflow: auto; margin: 0; padding-right: .5rem; }
+.dialog label.check { display: flex; align-items: center; gap: .45rem; margin: .5rem 0; cursor: pointer; }
+.lyrics-edit-bar { margin: 0 0 .6rem; }
+.lyrics-edit-bar label.check { margin: 0; }
+.lyrics-rows { display: grid; gap: .3rem; max-height: min(55vh, 30rem); overflow: auto; padding: .1rem .3rem .1rem .1rem; }
+.lyrics-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: .35rem; align-items: center; }
+.lyrics-rows.timed .lyrics-row { grid-template-columns: 5.5rem minmax(0, 1fr) auto auto; }
+.lyrics-row input[type=text] { width: 100%; min-width: 0; box-sizing: border-box; }
+.lyrics-row-time { font-variant-numeric: tabular-nums; }
+.lyrics-row-time.invalid { border-color: var(--missing); background: var(--missing-bg); }
+.lyrics-row .icon-button.small { width: 1.9rem; height: 1.9rem; min-width: 1.9rem; padding: 0; }
+.lyrics-text {
+    width: 100%; box-sizing: border-box; min-height: min(50vh, 26rem); resize: vertical; padding: .6rem .7rem;
+    font: .9rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); background: var(--bg);
+    border: 1px solid var(--border); border-radius: 6px;
+}
+.lyrics-search { gap: .5rem; flex-wrap: nowrap; margin-bottom: .75rem; }
+.lyrics-search input[type=search] { max-width: none; flex: 1; }
+.lyrics-choices { display: grid; gap: .4rem; max-height: min(60vh, 34rem); overflow: auto; }
+.lyrics-choice { border: 1px solid var(--border); border-radius: 8px; }
+.lyrics-choice.open { border-color: var(--accent); }
+.lyrics-choice-head {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: .75rem; align-items: center; width: 100%;
+    padding: .5rem .7rem; border: none; background: none; color: var(--text); text-align: left; cursor: pointer; font: inherit;
+}
+.lyrics-choice-title { display: flex; flex-direction: column; min-width: 0; }
+.lyrics-choice-title > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lyrics-choice .dialog-buttons { margin: 0; padding: .5rem .7rem; border-top: 1px solid var(--border); align-items: center; }
+.lyrics-preview { max-height: 14rem; overflow: auto; margin: 0; padding: .5rem .7rem; border-top: 1px solid var(--border); }
+@media (max-width: 640px) {
+    .lyrics-rows.timed .lyrics-row { grid-template-columns: 4.6rem minmax(0, 1fr) auto auto; }
+    .lyrics-actions .icon-button > span:not(.spinner) { display: none; }
+    .lyrics-actions .icon-button:has(span:not(.spinner)) { padding: 0; }
+}
+
+/* Playlists' folders as squares: the folder icon, or a picture of the folder's own; and the way back up. */
+.cover.folder-cover { display: grid; place-items: center; background: var(--bg); color: var(--accent); }
+.cover.folder-cover svg { width: 46%; height: 46%; fill: currentColor; fill-opacity: .18; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
+.folder-crumbs { display: flex; flex-wrap: wrap; gap: .4rem; align-items: baseline; margin: 1rem 0 .75rem; }
+
+/* Moving a song in a playlist: the "more" button and its menu. */
+.move-menu, .queue-menu { position: relative; display: inline-flex; vertical-align: middle; }
+/* After their own display, or those meant to go on a phone stay. */
+@media (max-width: 640px) { .move-menu.hide-narrow, .queue-menu.hide-narrow { display: none; } }
+/* A row's buttons, evenly apart whether or not they open a menu. */
+.row-actions { display: flex; gap: .3rem; align-items: center; justify-content: flex-end; }
+.move-menu .menu { text-align: left; }
+.menu button:disabled { opacity: .45; cursor: default; background: none; }
+
+/* Shuffle and repeat: quieter than the transport until they're on, then in the accent, with a dot beneath. */
+button.icon.mode { color: var(--muted); position: relative; }
+button.icon.mode svg { width: 1.05rem; height: 1.05rem; }
+button.icon.mode.on { color: var(--accent); }
+button.icon.mode.on::after {
+    content: ""; position: absolute; bottom: .1rem; left: 50%; width: 4px; height: 4px; margin-left: -2px;
+    border-radius: 50%; background: currentColor;
+}
+.np-controls button.icon.mode svg { width: 1.3rem; height: 1.3rem; }
+
+/* Dragging a song to another place: it fades, and a line in the accent shows where it'll go. */
+[data-reorder] [draggable=true] { cursor: grab; }
+.drag-handle { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 1rem; height: 1.6rem; color: var(--muted); opacity: .55; touch-action: none; }
+.drag-handle svg { width: .6rem; height: 1rem; fill: currentColor; }
+.drag-handle:hover, [data-reorder] li:hover > .drag-handle, [data-reorder] tr:hover .drag-handle { opacity: 1; }
+.drag-handle:active { cursor: grabbing; }
+.drag-handle.off { opacity: .2; cursor: default; }
+/* The handle at the start of a row's number cell, the number at its end. */
+.drag-num { display: flex; align-items: center; justify-content: space-between; gap: .25rem; }
+.dragging { opacity: .45; }
+.drop-before { box-shadow: inset 0 2px 0 var(--accent); }
+.drop-after { box-shadow: inset 0 -2px 0 var(--accent); }
+
+/* A long list draws only the rows near the screen. Each row it hasn't drawn is a slot shaped like a song's row: its
+   number, cover, title and artist, album, length and buttons, shimmering, so a list scrolled quickly fills in rather
+   than flashing blank. A table's body paints nothing where it has no cells, so the slots are drawn behind the table,
+   by its card, with the table's own background only the lines between rows. Lines vary in length over every three
+   rows. The columns' widths are those of .track-list's cols; drawn rows cover the slots behind them. */
+.card:has(> table.slots) {
+    position: relative;
+    --slot-head: 32px;
+    --slot-num: 0px;
+    --slot-pad: .75rem;
+    --slot-album: 32%;
+    --slot-length: 4.5rem;
+    --slot-actions: 9.5rem;
+    --slot-buttons: 3;
+    /* Drawn in a box as tall as the row and as wide as they are, they sit in its middle at whatever size they are. */
+    --slot-cover: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect x='0' width='1' height='1' rx='0.16'/></svg>");
+    --slot-button-row: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6.6 2'><rect x='0.0' width='2' height='2' rx='0.4'/><rect x='2.3' width='2' height='2' rx='0.4'/><rect x='4.6' width='2' height='2' rx='0.4'/></svg>");
+    /* What's left for the title. */
+    --slot-title: calc(100% - var(--slot-num) - 3.5rem - var(--slot-album) - var(--slot-length) - var(--slot-actions) - 2 * var(--slot-pad));
+}
+.card:has(> table.slots[data-reorder]) { --slot-num: calc(2.4rem + var(--digits, 2) * 1ch); }
+.card:has(> table.playlist-songs) { --slot-actions: 12.5rem; --slot-buttons: 4; --slot-button-row: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8.9 2'><rect x='0.0' width='2' height='2' rx='0.4'/><rect x='2.3' width='2' height='2' rx='0.4'/><rect x='4.6' width='2' height='2' rx='0.4'/><rect x='6.9' width='2' height='2' rx='0.4'/></svg>"); }
+@media (max-width: 640px) {
+    .card:has(> table.slots) {
+        --slot-pad: .5rem; --slot-album: 0px; --slot-length: 0px;
+    }
+    .card:has(> table.playlist-songs) { --slot-actions: 7.75rem; --slot-buttons: 3; --slot-button-row: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6.6 2'><rect x='0.0' width='2' height='2' rx='0.4'/><rect x='2.3' width='2' height='2' rx='0.4'/><rect x='4.6' width='2' height='2' rx='0.4'/></svg>"); }
+}
+.card:has(> table.slots)::before {
+    content: ""; position: absolute; inset: var(--slot-head) 0 0; pointer-events: none;
+    background: linear-gradient(100deg, var(--bg) 30%, var(--border) 50%, var(--bg) 70%) 0 0 / 300% 100%;
+    animation: shimmer 1.4s linear infinite;
+    mask-repeat: repeat-y;
+    mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><rect x='0' y='23' width='100%25' height='10' rx='4'/></svg>"), var(--slot-cover), url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><rect x='0' y='13' width='100%25' height='11' rx='4'/><rect x='0' y='69' width='72%25' height='11' rx='4'/><rect x='0' y='125' width='86%25' height='11' rx='4'/></svg>"), url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><rect x='0' y='34' width='58%25' height='9' rx='4'/><rect x='0' y='90' width='80%25' height='9' rx='4'/><rect x='0' y='146' width='44%25' height='9' rx='4'/></svg>"), url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><rect x='0' y='23' width='70%25' height='10' rx='4'/><rect x='0' y='79' width='100%25' height='10' rx='4'/><rect x='0' y='135' width='52%25' height='10' rx='4'/></svg>"), url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><rect x='0' y='23' width='100%25' height='10' rx='4'/></svg>"), var(--slot-button-row);
+    /* The number, the cover, the title and artist, the album, the length, the buttons. */
+    mask-size: calc(var(--slot-num) * .28) 56px, 2.5rem 56px, calc(var(--slot-title) * .6) 168px, calc(var(--slot-title) * .4) 168px,
+        calc(var(--slot-album) * .6) 168px, calc(var(--slot-length) * .45) 56px, calc(var(--slot-buttons) * 2.3rem - .3rem) 56px;
+    /* A percentage places that point of the shape on that point of the box: 100% puts its right edge on the box's.
+       The album's column starts 68% of the way along, less the columns after it, which for a shape 32% × .6 wide is
+       84.16% of the way. */
+    mask-position: calc(var(--slot-num) - var(--slot-pad) - var(--slot-num) * .28) 0, calc(var(--slot-num) + var(--slot-pad)) 0,
+        calc(var(--slot-num) + 3.5rem + var(--slot-pad)) 0, calc(var(--slot-num) + 3.5rem + var(--slot-pad)) 0,
+        calc(84.16% - var(--slot-actions) - var(--slot-length) + var(--slot-pad)) 0, calc(100% - var(--slot-actions) - var(--slot-pad)) 0,
+        calc(100% - 1rem) 0;
+}
+/* Positioned, so it's drawn over its card's slots. Borders apart, not collapsed, so that a row is exactly as tall as
+   its cells, 56px, as a slot is: a fraction more, and over thousands they'd drift apart. */
+table.slots {
+    position: relative; border-collapse: separate; border-spacing: 0;
+    background: repeating-linear-gradient(to bottom, transparent 0 55px, var(--border) 55px 56px) 0 32px / 100% 100% no-repeat;
+}
+/* Rows are their height, not their padding plus their content, which on a phone comes to a fraction more. Cells
+   centre what's in them. */
+table.slots td, table.slots th { padding-top: 0; padding-bottom: 0; }
+table.slots thead th { height: 32px; box-sizing: border-box; }
+:where(table.slots > tbody > tr) > td { background-color: var(--surface); }
+/* The # column fits the list's longest number beside the handle that moves it. */
+.track-list[data-reorder] col.num-col { width: calc(2.4rem + var(--digits, 2) * 1ch); }
+.track-list[data-reorder] td.num { font-variant-numeric: tabular-nums; }
+
+/* The folders a format will remove, listed before it starts. */
+.format-folders { margin: -.25rem 0 .75rem; }
+.format-folders summary { cursor: pointer; }
+.format-folders ul { max-height: 12rem; overflow: auto; margin: .4rem 0 0; padding-left: 1.2rem; font-size: .85rem; }

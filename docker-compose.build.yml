@@ -1,0 +1,8 @@
+# Builds the images from this checkout instead of pulling releases:
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
+services:
+  core:
+    image: romdex-core:dev
+    build:
+      context: .
+      dockerfile: docker/core.Dockerfile

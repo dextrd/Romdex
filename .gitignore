@@ -3,3 +3,13 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+.idea/
+*.user
+/data/
+src/Romdex.Core/data/
+src/Romdex.Core/plugins/
+node_modules/
+.env
+sandbox/roms/
+sandbox/inbox/
+sandbox/dats/

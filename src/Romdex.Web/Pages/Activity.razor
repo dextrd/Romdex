@@ -1,0 +1,128 @@
+@page "/"
+@page "/activity"
+@implements IDisposable
+@inject RomdexClient Api
+@inject ServerEvents Events
+
+<PageTitle>Activity · Romdex</PageTitle>
+
+<h1>Activity</h1>
+<p class="muted">What Romdex is doing and has done: scans, DAT updates, intake and conversions, as each arrives.</p>
+
+<div class="toolbar">
+    <Segmented T="bool" Value="_activeOnly" Options="Tabs" OnChange="v => _activeOnly = v" Label="Show" />
+    <input type="search" placeholder="Filter by title" @bind="_filter" @bind:event="oninput" />
+</div>
+
+@if (!_loaded)
+{
+    <Loading />
+}
+else if (!Visible.Any())
+{
+    <div class="empty card">
+        @if (_filter.Length > 0) { <span>Nothing matches.</span> }
+        else if (_activeOnly)
+        {
+            <span>Nothing's happening right now. </span>
+            @if (_tasks.Count > 0) { <button class="link" @onclick="() => _activeOnly = false">Show all time</button> }
+        }
+        else { <span>Nothing yet.</span> }
+    </div>
+}
+else
+{
+    <div class="card">
+        @foreach (var task in Visible)
+        {
+            <div class="request">
+                <div class="request-head">
+                    <span class="request-toggle">
+                        <span aria-hidden="true"></span>
+                        <span class="request-title">@(task.Title ?? task.Kind)</span>
+                    </span>
+                    <span class="request-state"><span class="badge @Format.TaskBadge(task)">@Format.TaskLabel(task)</span></span>
+                    <span class="muted small request-time hide-narrow" title="@task.UpdatedAt.ToLocalTime()">@Format.Ago(task.UpdatedAt)</span>
+                    <span class="request-actions"><TaskActions Item="task" Queue="TaskQueue" OnChanged="ChangedAsync" /></span>
+                </div>
+                @if (task.Error is not null) { <div class="small request-detail error">@task.Error</div> }
+                else if (task.Progress is not null) { <div class="muted small request-detail">@task.Progress</div> }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private bool _loaded;
+    private static readonly IReadOnlyList<(bool Value, string Label, string? Hint)> Tabs = [(true, "Now", null), (false, "All time", null)];
+
+    private bool _activeOnly = true;
+    private string _filter = "";
+    private IReadOnlyList<TaskInfo> _tasks = [];
+    private Timer? _timer;
+    private int _idlePolls;
+
+    /// <summary>Tasks waiting their turn, in the order they'll run.</summary>
+    private IReadOnlyList<TaskInfo> TaskQueue =>
+        _tasks.Where(t => t.State == TaskState.Queued).OrderBy(t => t.QueueOrder).ThenBy(t => t.CreatedAt).ToList();
+
+    // What's running, then what's waiting in queue order, then the rest, most recently changed first.
+    private IEnumerable<TaskInfo> Visible
+    {
+        get
+        {
+            var tasks = _tasks.Where(t => !_activeOnly || t.Active)
+                .Where(t => _filter.Length == 0 || (t.Title ?? t.Kind).Contains(_filter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            var active = tasks.Where(t => t.Active).OrderByDescending(t => t.State == TaskState.Running).ThenBy(t => t.QueueOrder).ThenBy(t => t.CreatedAt);
+            return active.Concat(tasks.Where(t => !t.Active).OrderByDescending(t => t.UpdatedAt));
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Events.Received += OnEvent;
+        await LoadAsync();
+        _loaded = true;
+        // Polled too, in case events don't arrive; quicker while something's running.
+        _timer = new Timer(_ => InvokeAsync(async () =>
+        {
+            if (_tasks.Any(t => t.Active) || ++_idlePolls % 5 == 0)
+            {
+                await LoadAsync();
+                StateHasChanged();
+            }
+        }), null, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(3));
+    }
+
+    // A task that starts shows at once, not at the next idle poll.
+    private void OnEvent(string type)
+    {
+        if (type is "tasks" or "connected")
+            InvokeAsync(ChangedAsync);
+    }
+
+    private async Task ChangedAsync()
+    {
+        await LoadAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            _tasks = await Api.ListTasksAsync(limit: 50);
+        }
+        catch (HttpRequestException)
+        {
+            // Keep what's shown; the next poll tries again.
+        }
+    }
+
+    public void Dispose()
+    {
+        Events.Received -= OnEvent;
+        _timer?.Dispose();
+    }
+}

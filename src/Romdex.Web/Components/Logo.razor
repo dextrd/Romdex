@@ -1,0 +1,16 @@
+@* The Romdex mark, a cartridge with its label and contacts, in the theme's accent. The same shape as wwwroot/favicon.svg. *@
+<svg class="logo @Class" viewBox="0 0 32 32" aria-hidden="true">
+    <rect width="32" height="32" rx="8" fill="var(--accent)" />
+    <path d="M8 5.5h13l3 3V27H8z" fill="var(--accent-text)" />
+    <g fill="var(--accent)">
+        <rect x="11" y="9" width="10" height="8" rx="1" />
+        <rect x="11" y="21.5" width="1.6" height="4" rx="0.5" />
+        <rect x="14.2" y="21.5" width="1.6" height="4" rx="0.5" />
+        <rect x="17.4" y="21.5" width="1.6" height="4" rx="0.5" />
+        <rect x="20.6" y="21.5" width="1.6" height="4" rx="0.5" />
+    </g>
+</svg>
+
+@code {
+    [Parameter] public string? Class { get; set; }
+}

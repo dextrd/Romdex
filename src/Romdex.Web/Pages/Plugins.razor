@@ -1,0 +1,403 @@
+@page "/settings/plugins"
+@layout SettingsLayout
+@using Romdex.Contracts.Plugins
+@inject RomdexClient Api
+
+<SectionTitle>Plugins · Romdex</SectionTitle>
+
+@if (!InSetup)
+{
+    <p class="muted">What Romdex works through: the catalogue it checks your games against, where new dumps come in from, and the apps it tells about your library.</p>
+}
+
+@if (_plugins is null)
+{
+    <Loading />
+}
+else
+{
+    @if (_error is not null && _choosing is null && _editing is null && _removing is null) { <div class="notice error">@_error</div> }
+
+    <div class="plugin-sections">
+        @Section(PluginType.Index, "Catalogue",
+            "Where Romdex learns every verified dump of each system, from DATs, to tell what you have and what's missing. Romdex asks these in order and keeps the first match.",
+            "No catalogue. Romdex can list your files, but can't tell what any of them are or what's missing until you add one.")
+        @Section(PluginType.Intake, "Intake",
+            "Intake plugins run in their own containers and offer new dumps, such as files dropped into an inbox folder. Each is checked by its hash before it's filed.",
+            "No intake yet. Your library is still read, but nothing new comes in through Romdex.")
+        @Section(PluginType.Connector, "Connected apps",
+            "Apps that show your games, such as RomM, told to scan when something is filed. The first one that's on is used.",
+            "No connected apps. Games are still filed, but nothing is told about it.")
+    </div>
+
+    @if (_choosing is { } type)
+    {
+        <Dialog Title="@(_adding is { } a ? $"Add {a.Name}" : $"Add to {SectionName(type)}")" OnClose="CloseAdd" Class="wide">
+            @if (_error is not null) { <p class="error">@_error</p> }
+            @if (_adding is { } adding)
+            {
+                @if (adding.BuiltIn is { Manifest.UsesSettingsOf: not null } borrower)
+                {
+                    <p class="muted">Uses the connection to @(Lender(borrower)?.Name ?? "the plugin it needs"), so there's nothing to set up.</p>
+                }
+                else if (adding.BuiltIn is { } builtIn)
+                {
+                    <SchemaForm @ref="_addForm" Schema="builtIn.Manifest.SettingsSchema" />
+                }
+                else
+                {
+                    <label class="field">
+                        <span class="field-label">Address</span>
+                        <input type="text" placeholder="http://my-plugin:8080" @bind="_endpoint" @bind:event="oninput" />
+                        <span class="muted small">Where Romdex reaches the plugin. In the same Compose project, that's its service name and port.</span>
+                    </label>
+                }
+                <div class="toolbar dialog-buttons">
+                    <button @onclick="() => _adding = null">Back</button>
+                    <button class="primary" disabled="@(_busy || adding.BuiltIn is null && string.IsNullOrWhiteSpace(_endpoint))" @onclick="AddAsync">
+                        @if (_busy) { <span class="spinner"></span> }Add and test
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="templates">
+                    @foreach (var template in Templates(type))
+                    {
+                        var added = Added(template);
+                        var needs = Needs(template);
+                        <button class="template" disabled="@(added || needs is not null)" @onclick="() => Pick(template)">
+                            <strong>@template.Name</strong>
+                            <span class="muted small">@template.Description</span>
+                            @if (added) { <span class="badge owned">Added</span> }
+                            else if (needs is not null) { <span class="small plugin-message">Set up @needs first.</span> }
+                            else if (template.Endpoint is { Length: > 0 } url) { <code class="small">@url</code> }
+                        </button>
+                    }
+                </div>
+                <div class="toolbar dialog-buttons"><button @onclick="CloseAdd">Cancel</button></div>
+            }
+        </Dialog>
+    }
+
+    @if (_removing is { } removing)
+    {
+        <Dialog Title="@($"Remove {removing.Name}?")" OnClose="() => _removing = null" Alert="true">
+            @if (_error is not null) { <p class="error">@_error</p> }
+            <p>Its settings are forgotten. You can add it again later.</p>
+            @if (removing.Type == PluginType.Index && _plugins.Count(p => p.Type == PluginType.Index) == 1)
+            {
+                <p>It's your only catalogue. Without one, Romdex can't tell what your files are or what's missing until you add one.</p>
+            }
+            <div class="toolbar dialog-buttons">
+                <button @onclick="() => _removing = null">Cancel</button>
+                <button class="danger" disabled="@_busy" @onclick="() => RemoveAsync(removing)">Remove</button>
+            </div>
+        </Dialog>
+    }
+
+    @if (_editing is { } editingId && _plugins.FirstOrDefault(p => p.Id == editingId) is { } editing)
+    {
+        <Dialog Title="@($"{editing.Name} settings")" OnClose="() => _editing = null" Class="wide">
+            @if (_error is not null) { <p class="error">@_error</p> }
+            <SchemaForm @ref="_editForm" Schema="editing.Manifest?.SettingsSchema" Settings="editing.Settings" HasSaved="true" />
+            @foreach (var check in editing.Manifest?.Checks ?? [])
+            {
+                <div class="field">
+                    <button disabled="@(_checking is not null)" @onclick="() => CheckAsync(editing, check.Id)">
+                        @if (_checking == check.Id) { <span class="spinner"></span> }@check.Title
+                    </button>
+                    @if (check.Description is not null) { <div class="muted small">@check.Description</div> }
+                    @if (_checks.TryGetValue(check.Id, out var found))
+                    {
+                        <div class="notice @(found.Passed ? "passed" : "warning")"><LinkedText Value="@found.Message" /></div>
+                    }
+                </div>
+            }
+            <div class="toolbar dialog-buttons">
+                <button @onclick="() => _editing = null">Cancel</button>
+                <button class="primary" disabled="@_busy" @onclick="() => SaveAsync(editing)">
+                    @if (_busy) { <span class="spinner"></span> }Save and test
+                </button>
+            </div>
+        </Dialog>
+    }
+}
+
+@code {
+    /// <summary>Something that can be added: an intake plugin Romdex knows the usual address of, any other by its address, or a built-in plugin.</summary>
+    public sealed record Template(string Key, string Name, string Description, PluginType Type, string? Endpoint = null, AvailablePlugin? BuiltIn = null);
+
+    // The intake plugins that ship alongside Romdex, at the addresses the Compose file gives them.
+    public static readonly Template[] KnownSources =
+    [
+        new("inbox", "Inbox folder", "Offers files you drop into a folder, matched by their hashes.", PluginType.Intake, "http://intake-inbox:8080"),
+        new("other", "Another plugin", "Any plugin that speaks the intake contract, by its address.", PluginType.Intake, ""),
+    ];
+
+    private IReadOnlyList<PluginInfo>? _plugins;
+    private IReadOnlyList<AvailablePlugin> _available = [];
+    private string? _error;
+    private bool _busy;
+
+    private Guid? _editing;
+    private string? _checking;
+    private readonly Dictionary<string, PluginCheckResult> _checks = [];
+    /// <summary>Shown in the first run's setup, which says what plugins are itself.</summary>
+    [Parameter] public bool InSetup { get; set; }
+
+    private PluginInfo? _removing;
+    private readonly HashSet<Guid> _expanded = [];
+
+    private void ToggleExpanded(PluginInfo plugin)
+    {
+        if (!_expanded.Remove(plugin.Id))
+            _expanded.Add(plugin.Id);
+    }
+
+    private void ToggleOnKey(KeyboardEventArgs e, PluginInfo plugin)
+    {
+        if (e.Key is "Enter" or " ")
+            ToggleExpanded(plugin);
+    }
+    private SchemaForm? _editForm;
+
+    // Adding: the section whose templates are showing, then the template being filled in.
+    private PluginType? _choosing;
+    private Template? _adding;
+    private string _endpoint = "";
+    private SchemaForm? _addForm;
+
+    private IEnumerable<PluginInfo> OfType(PluginType type) => _plugins!.Where(p => p.Type == type).OrderBy(p => p.Priority);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _available = await Api.ListAvailablePluginsAsync();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync() => _plugins = await Api.ListPluginsAsync();
+
+    private IEnumerable<Template> Templates(PluginType type) => type == PluginType.Intake
+        ? KnownSources
+        : _available.Where(a => a.Manifest.Type == type && a.Problem is null)
+            .Select(a => new Template(a.Manifest.Id, a.Manifest.Name, a.Manifest.Description ?? "", type, BuiltIn: a));
+
+    /// <summary>The plugin whose connection a plugin borrows, if it's set up.</summary>
+    private PluginInfo? Lender(AvailablePlugin plugin) =>
+        plugin.Manifest.UsesSettingsOf is { } lender ? _plugins!.Where(p => p.PluginId == lender).MinBy(p => p.Priority) : null;
+
+    /// <summary>The name of the plugin to set up first, when a template borrows its connection and it isn't set up.</summary>
+    private string? Needs(Template template) =>
+        template.BuiltIn is { Manifest.UsesSettingsOf: { } lender } builtIn && Lender(builtIn) is null
+            ? _available.FirstOrDefault(a => a.Manifest.Id == lender)?.Manifest.Name ?? lender
+            : null;
+
+    /// <summary>Already set up: a source at the same address, or the same built-in plugin.</summary>
+    private bool Added(Template template) => template.BuiltIn is { } builtIn
+        ? _plugins!.Any(p => p.PluginId == builtIn.Manifest.Id)
+        : template.Endpoint is { Length: > 0 } url && _plugins!.Any(p => string.Equals(p.Endpoint, url.TrimEnd('/'), StringComparison.OrdinalIgnoreCase));
+
+    private static string SectionName(PluginType type) => type switch
+    {
+        PluginType.Index => "Catalogue",
+        PluginType.Intake => "Intake",
+        _ => "Connected apps",
+    };
+
+    private static bool Ordered(PluginType type) => type is PluginType.Intake or PluginType.Index;
+
+    private RenderFragment Section(PluginType type, string title, string about, string empty) => __builder =>
+    {
+        var plugins = OfType(type).ToList();
+        <section class="panel plugin-section" aria-label="@title">
+            <header class="panel-head">
+                <div class="panel-title">
+                    <h2>@title</h2>
+                    <p class="muted small">@about</p>
+                </div>
+                @if (Templates(type).Any())
+                {
+                    <button class="primary small" @onclick="() => Choose(type)">Add</button>
+                }
+            </header>
+            @if (plugins.Count == 0)
+            {
+                <div class="panel-empty muted small">@empty</div>
+            }
+            else
+            {
+                <div class="plugin-grid">
+                    @foreach (var plugin in plugins)
+                    {
+                        @Card(plugin, plugins)
+                    }
+                </div>
+            }
+        </section>
+    };
+
+    private RenderFragment Card(PluginInfo plugin, List<PluginInfo> list) => __builder =>
+    {
+        var index = list.IndexOf(plugin);
+        var problem = plugin.HealthMessage is not null && plugin.Health != HealthStatus.Healthy ? plugin.HealthMessage : null;
+        var expanded = _expanded.Contains(plugin.Id);
+        <div class="plugin-card @(plugin.Enabled ? "" : "off") @(expanded ? "open" : "")">
+            <div class="plugin-top">
+                @if (Ordered(plugin.Type) && list.Count > 1)
+                {
+                    <span class="plugin-order" title="Asked @(Ordinal(index + 1))">@(index + 1)</span>
+                }
+                <strong class="ellipsis" title="@plugin.Name">@plugin.Name</strong>
+                <span class="spacer"></span>
+                @if (plugin.Enabled)
+                {
+                    <span class="badge @HealthBadge(plugin.Health)" title="@plugin.HealthMessage">@HealthLabel(plugin.Health)</span>
+                }
+                else
+                {
+                    <span class="badge neutral">Off</span>
+                }
+            </div>
+            @* Two lines each, so the cards line up; a click or tap shows the rest. *@
+            <div class="muted small plugin-about" title="@(expanded ? null : plugin.Endpoint ?? plugin.Manifest?.Description)" role="button" tabindex="0"
+                 aria-expanded="@(expanded ? "true" : "false")" @onclick="() => ToggleExpanded(plugin)"
+                 @onkeydown="e => ToggleOnKey(e, plugin)">
+                @(plugin.Endpoint ?? plugin.Manifest?.Description)@(plugin.Manifest is { } m ? $" · v{m.Version}" : "")
+            </div>
+            <div class="small plugin-message" title="@(expanded ? null : problem)" @onclick="() => ToggleExpanded(plugin)"><LinkedText Value="@problem" /></div>
+            <div class="plugin-actions">
+                @if (Ordered(plugin.Type) && list.Count > 1)
+                {
+                    <IconButton Icon="up" Title="Ask earlier" Disabled="@(_busy || index == 0)" OnClick="() => MoveAsync(plugin, -1)" />
+                    <IconButton Icon="down" Title="Ask later" Disabled="@(_busy || index == list.Count - 1)" OnClick="() => MoveAsync(plugin, 1)" />
+                }
+                <span class="spacer"></span>
+                <IconButton Icon="power" On="plugin.Enabled" Title="@(plugin.Enabled ? "On: click to turn it off" : "Off: click to turn it on")"
+                            Disabled="_busy" OnClick="() => SetEnabledAsync(plugin, !plugin.Enabled)" />
+                <IconButton Icon="test" Title="Test the connection" Disabled="_busy" OnClick="() => TestAsync(plugin)" />
+                @if (plugin.Manifest is not { UsesSettingsOf: not null })
+                {
+                    <IconButton Icon="settings" Title="Settings" OnClick="() => Edit(plugin)" />
+                }
+                <IconButton Icon="remove" Class="remove" Title="Remove" Disabled="_busy" OnClick="() => _removing = plugin" />
+            </div>
+        </div>
+    };
+
+    private static string Ordinal(int n) => n switch { 1 => "first", 2 => "second", 3 => "third", _ => $"{n}th" };
+
+    private void Edit(PluginInfo plugin)
+    {
+        _editing = plugin.Id;
+        _error = null;
+        _checks.Clear();
+    }
+
+    // A check runs with the settings as they are in the form, so a change can be tried before it's saved.
+    private async Task CheckAsync(PluginInfo plugin, string check)
+    {
+        _checking = check;
+        try
+        {
+            _checks[check] = await Api.RunPluginCheckAsync(plugin.Id, check, new RunPluginCheck(_editForm!.ToJson()));
+        }
+        catch (Exception e) when (e is RomdexApiException or HttpRequestException)
+        {
+            _checks[check] = new PluginCheckResult(false, $"Couldn't check: {e.Message}");
+        }
+        finally
+        {
+            _checking = null;
+        }
+    }
+
+    private void CloseAdd()
+    {
+        _choosing = null;
+        _adding = null;
+        _error = null;
+    }
+
+    private void Choose(PluginType type)
+    {
+        _choosing = type;
+        _adding = null;
+        _error = null;
+    }
+
+    private void Pick(Template template)
+    {
+        _adding = template;
+        _endpoint = template.Endpoint ?? "";
+    }
+
+    private Task AddAsync() => RunAsync(async () =>
+    {
+        var adding = _adding!;
+        var added = adding.BuiltIn is { } builtIn
+            ? await Api.AddPluginAsync(new AddPlugin(PluginId: builtIn.Manifest.Id, Settings: builtIn.Manifest.UsesSettingsOf is null ? _addForm!.ToJson() : null))
+            : await Api.AddPluginAsync(new AddPlugin(Endpoint: _endpoint.Trim()));
+        _adding = null;
+        _choosing = null;
+        await Api.TestPluginAsync(added.Id);
+    });
+
+    private Task SaveAsync(PluginInfo plugin) => RunAsync(async () =>
+    {
+        await Api.UpdatePluginAsync(plugin.Id, new UpdatePlugin(Settings: _editForm!.ToJson()));
+        _editing = null;
+        await Api.TestPluginAsync(plugin.Id);
+    });
+
+    private Task TestAsync(PluginInfo plugin) => RunAsync(() => Api.TestPluginAsync(plugin.Id));
+
+    private Task SetEnabledAsync(PluginInfo plugin, bool enabled) => RunAsync(() => Api.UpdatePluginAsync(plugin.Id, new UpdatePlugin(Enabled: enabled)));
+
+    private Task RemoveAsync(PluginInfo plugin) => RunAsync(async () =>
+    {
+        await Api.RemovePluginAsync(plugin.Id);
+        _removing = null;
+    });
+
+    private Task MoveAsync(PluginInfo plugin, int by) => RunAsync(() =>
+    {
+        var order = OfType(plugin.Type).Select(p => p.Id).ToList();
+        var from = order.IndexOf(plugin.Id);
+        order.RemoveAt(from);
+        order.Insert(from + by, plugin.Id);
+        return Api.OrderPluginsAsync(order);
+    });
+
+    private async Task RunAsync(Func<Task> action)
+    {
+        _busy = true;
+        _error = null;
+        try
+        {
+            await action();
+        }
+        catch (RomdexApiException e)
+        {
+            _error = e.Message;
+        }
+        await LoadAsync();
+        _busy = false;
+    }
+
+    private static string HealthBadge(HealthStatus? health) => health switch
+    {
+        HealthStatus.Healthy => "owned",
+        HealthStatus.Degraded => "partial",
+        HealthStatus.Unhealthy => "missing",
+        _ => "neutral",
+    };
+
+    private static string HealthLabel(HealthStatus? health) => health switch
+    {
+        HealthStatus.Healthy => "Working",
+        HealthStatus.Degraded => "Partly working",
+        HealthStatus.Unhealthy => "Not working",
+        _ => "Not tested",
+    };
+}

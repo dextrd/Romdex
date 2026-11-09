@@ -1,0 +1,71 @@
+@inject RomdexClient Api
+
+@* Setup's games step: whether Romdex can read the ROM library, and whether there are DATs to check it against. *@
+@if (_status is null)
+{
+    <Loading />
+}
+else
+{
+    <div class="card setup-card">
+        <h2>ROM library</h2>
+        <p>Romdex reads <code>@_status.LibraryPath</code>. It never changes your files without asking.</p>
+        @if (!_status.LibraryReadable)
+        {
+            <p class="error">Romdex can't open it. Check <code>ROMS_PATH</code> in your compose file, and that the folder can be read by the container.</p>
+        }
+        else if (_status.LibraryFiles == 0)
+        {
+            <p class="error">It's empty. Check <code>ROMS_PATH</code> points at your games, or carry on to start from nothing.</p>
+        }
+        else
+        {
+            <p>It has @(_status.LibraryFiles == 1 ? "1 file" : $"{Many(_status.LibraryFiles)} files").</p>
+        }
+    </div>
+
+    <div class="card setup-card">
+        <h2>DATs</h2>
+        <p>
+            DATs list every verified dump of a system with its checksums, which is how Romdex knows what you have and what's missing. Download
+            No-Intro's from <a href="https://datomatic.no-intro.org" target="_blank" rel="noopener">DAT-o-MATIC</a> and Redump's from
+            <a href="https://redump.info" target="_blank" rel="noopener">redump.info</a>, and drop them, zipped or not, into
+            <code>@_status.DatPath</code>.
+        </p>
+        @if (_status.DatFiles == 0)
+        {
+            <p class="error">There are none there yet. Romdex works without them, but can't tell what anything is until there are.</p>
+        }
+        else
+        {
+            <p>There @(_status.DatFiles == 1 ? "is 1 DAT" : $"are {Many(_status.DatFiles)} DATs") there.</p>
+        }
+        @if (!_status.Catalogue)
+        {
+            <p class="muted small">No index plugin reads them yet: add the DAT folder plugin in the next step.</p>
+        }
+    </div>
+    <div class="toolbar"><button @onclick="CheckAsync" disabled="@_busy">Check again</button></div>
+}
+
+@code {
+    private SetupStatus? _status;
+    private bool _busy;
+
+    protected override Task OnInitializedAsync() => CheckAsync();
+
+    private async Task CheckAsync()
+    {
+        _busy = true;
+        try
+        {
+            _status = await Api.GetSetupAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private static string Many(int count) => count >= SetupStatus.CountLimit ? $"over {SetupStatus.CountLimit:N0}" : count.ToString("N0");
+}

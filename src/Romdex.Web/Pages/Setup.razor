@@ -1,0 +1,8 @@
+@page "/setup"
+@inject NavigationManager Nav
+
+@* Setup became the full-screen steps the app shows until it's finished; afterwards, old links go to the library. *@
+
+@code {
+    protected override void OnInitialized() => Nav.NavigateTo("", replace: true);
+}

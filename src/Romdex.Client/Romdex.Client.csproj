@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Romdex.Client</RootNamespace>
+    <PackageId>Romdex.Client</PackageId>
+    <Description>Typed .NET client and models for the Romdex public API (/api/v1).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Romdex.Contracts\Romdex.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,12 @@
+@page "/settings/appearance"
+@layout SettingsLayout
+@inject AuthState Auth
+
+<PageTitle>Appearance · Romdex</PageTitle>
+
+@* Your own look, and for whoever may change settings, everyone's: what people see until they choose their own. *@
+<AppearancePanel />
+@if (Auth.May(UserPermissions.Settings))
+{
+    <AppearancePanel ForEveryone="true" />
+}

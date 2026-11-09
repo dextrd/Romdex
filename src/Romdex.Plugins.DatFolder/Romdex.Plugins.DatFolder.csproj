@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Romdex.Plugins.DatFolder</RootNamespace>
+    <Description>Romdex index plugin that reads No-Intro and Redump DATs from a folder.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Romdex.Contracts\Romdex.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

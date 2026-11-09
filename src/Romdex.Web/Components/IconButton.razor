@@ -1,0 +1,189 @@
+@inject AuthState Auth
+
+@* A square button with an icon, for the actions beside games and tasks. The title says what it does. *@
+@if (Requires is null || Auth.May(Requires))
+{
+<button class="icon-button @Class @(Primary ? "primary" : "") @(Large ? "large" : "") @(On ? "on" : "") @(_done ? "done" : "")" title="@Title" aria-label="@Title"
+        disabled="@(Disabled || _busy)" @onclick="ClickAsync">
+    @if (_busy)
+    {
+        <span class="spinner"></span>
+    }
+    else
+    {
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            @switch (_done ? "done" : Icon)
+            {
+                case "play":
+                    <path class="fill" d="M8 5v14l11-7z" />
+                    break;
+                case "listen":
+                    <path d="M4 15v-3a8 8 0 0 1 16 0v3" /><rect x="3" y="14" width="4" height="6" rx="1.5" /><rect x="17" y="14" width="4" height="6" rx="1.5" />
+                    break;
+                case "get":
+                    <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
+                    break;
+                case "queue":
+                    <path d="M4 6h12M4 11h12M4 16h7M17 14v6M14 17h6" />
+                    break;
+                case "ignore":
+                    <path d="M3 3l18 18M10.6 6.1A9.6 9.6 0 0 1 12 6c5 0 8.5 4 9.5 6a13 13 0 0 1-2.9 3.6M6.4 7.6A13.4 13.4 0 0 0 2.5 12c1 2 4.5 6 9.5 6a9.5 9.5 0 0 0 4.2-1M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                    break;
+                case "unignore":
+                    <path d="M2.5 12c1-2 4.5-6 9.5-6s8.5 4 9.5 6c-1 2-4.5 6-9.5 6s-8.5-4-9.5-6z" /><circle cx="12" cy="12" r="3" />
+                    break;
+                case "retry":
+                    <path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6" />
+                    break;
+                case "add":
+                    <path d="M3 8h18v12H3zM5 8l2-4h10l2 4M12 11v6M9 14h6" />
+                    break;
+                case "discard":
+                    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                    break;
+                case "remove":
+                    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                    break;
+                case "cancel":
+                    <path d="M6 6l12 12M18 6L6 18" />
+                    break;
+                case "up":
+                    <path d="M12 19V5M6 11l6-6 6 6" />
+                    break;
+                case "down":
+                    <path d="M12 5v14M6 13l6 6 6-6" />
+                    break;
+                case "test":
+                    <path d="M3 12h4l3-7 4 14 3-7h4" />
+                    break;
+                case "settings":
+                    <path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" />
+                    break;
+                case "power":
+                    <path d="M12 3v8M7.1 6.1a8 8 0 1 0 9.8 0" />
+                    break;
+                case "approve":
+                    <path d="M5 12.5l4.5 4.5L19 7.5" />
+                    break;
+                case "exclude":
+                    <circle cx="12" cy="12" r="8" /><path d="M6.4 6.4l11.2 11.2" />
+                    break;
+                case "defer":
+                    <circle cx="12" cy="12" r="8" /><path d="M12 8v4l3 2" />
+                    break;
+                case "hide":
+                    <path d="M3 3l18 18M10.6 6.1A9.6 9.6 0 0 1 12 6c5 0 8.5 4 9.5 6a13 13 0 0 1-2.9 3.6M6.4 7.6A13.4 13.4 0 0 0 2.5 12c1 2 4.5 6 9.5 6a9.5 9.5 0 0 0 4.2-1M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                    break;
+                case "putback":
+                    <path d="M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+                    break;
+                case "search":
+                    <circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5" />
+                    break;
+                case "pause":
+                    <path class="fill" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" />
+                    break;
+                case "top":
+                    <path d="M5 4h14M12 20V9M6 14l6-6 6 6" />
+                    break;
+                case "copy":
+                    <rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" />
+                    break;
+                case "key":
+                    <circle cx="8" cy="15" r="4" /><path d="M11 12l9-9M16 7l3 3M14 9l2 2" />
+                    break;
+                case "show":
+                    <path d="M2.5 12c1-2 4.5-6 9.5-6s8.5 4 9.5 6c-1 2-4.5 6-9.5 6s-8.5-4-9.5-6z" /><circle cx="12" cy="12" r="3" />
+                    break;
+                case "history":
+                    <path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4M12 8v4l3 2" />
+                    break;
+                case "image":
+                    <rect x="3.5" y="3.5" width="17" height="17" rx="2" /><circle cx="9" cy="9" r="1.6" /><path d="M20.5 15.5l-5-5-9 10" />
+                    break;
+                case "format":
+                    <path d="M3.5 12.5V4h8.5l9 9-8.5 8.5z" /><circle cx="8" cy="8.5" r="1.4" />
+                    break;
+                case "plus":
+                    <path d="M12 5v14M5 12h14" />
+                    break;
+                case "playlist":
+                    <path d="M4 6h11M4 11h11M4 16h6" /><circle cx="16.5" cy="17.5" r="2.5" /><path d="M19 17.5V9l2.5 1" />
+                    break;
+                case "more":
+                    <circle class="fill" cx="12" cy="5" r="1.6" /><circle class="fill" cx="12" cy="12" r="1.6" /><circle class="fill" cx="12" cy="19" r="1.6" />
+                    break;
+                case "repeat":
+                    <path d="M17 3l3 3-3 3M4 11V9a3 3 0 0 1 3-3h13M7 21l-3-3 3-3M20 13v2a3 3 0 0 1-3 3H4" />
+                    break;
+                case "repeat-one":
+                    <path d="M17 3l3 3-3 3M4 11V9a3 3 0 0 1 3-3h13M7 21l-3-3 3-3M20 13v2a3 3 0 0 1-3 3H4M11 10.5l1.5-1v5" />
+                    break;
+                case "shuffle":
+                    <path d="M4 7h3.5c4.5 0 4.5 10 9 10H20M4 17h3.5c1.6 0 2.6-1.3 3.4-3M13.1 10c.8-1.7 1.8-3 3.4-3H20M17.5 4.5 20 7l-2.5 2.5M17.5 14.5 20 17l-2.5 2.5" />
+                    break;
+                case "rename":
+                    <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" />
+                    break;
+                case "done":
+                    <path d="M5 12.5l4.5 4.5L19 7.5" />
+                    break;
+                case "open":
+                    <path d="M14 4h6v6M20 4l-8 8M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+                    break;
+                case "pin":
+                    <path d="M9 4h6l-1 6 3.5 3.5h-11L10 10zM12 13.5V20" />
+                    break;
+            }
+        </svg>
+    }
+    @if (Label is not null) { <span>@Label</span> }
+</button>
+}
+
+@code {
+    /// <summary>play, listen, get, queue, ignore, unignore, retry, add, discard, remove, cancel, up, down, test, settings, power, approve, search, copy, key, show, history, pause, top, format, exclude, defer, hide, putback, image, plus, playlist, shuffle or rename.</summary>
+    [Parameter, EditorRequired] public string Icon { get; set; } = "";
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool Primary { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>Lit, for a button that switches something on and off.</summary>
+    [Parameter] public bool On { get; set; }
+
+    /// <summary>Bigger, for the head of a page.</summary>
+    [Parameter] public bool Large { get; set; }
+
+    /// <summary>Text beside the icon, for a button that needs it.</summary>
+    [Parameter] public string? Label { get; set; }
+
+    /// <summary>Shows a tick for a moment afterwards, for actions with nothing else to show, such as adding to the queue.</summary>
+    [Parameter] public bool Confirm { get; set; }
+
+    /// <summary>The permission it needs: without it, the button isn't shown. See <see cref="UserPermissions"/>.</summary>
+    [Parameter] public string? Requires { get; set; }
+
+    private bool _busy;
+    private bool _done;
+
+    private async Task ClickAsync()
+    {
+        _busy = true;
+        try
+        {
+            await OnClick.InvokeAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+        if (!Confirm)
+            return;
+        _done = true;
+        StateHasChanged();
+        await Task.Delay(1500);
+        _done = false;
+    }
+}

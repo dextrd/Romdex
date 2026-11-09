@@ -1,0 +1,89 @@
+@page "/settings/about"
+@layout SettingsLayout
+@using System.Reflection
+@inject RomdexClient Api
+
+<PageTitle>About · Romdex</PageTitle>
+
+@* Which Romdex this is, where it comes from, and who made it and what it's built on. *@
+<section class="panel about">
+    <div class="about-head">
+        <Logo Class="about-logo" />
+        <div>
+            <h2>Romdex</h2>
+            <p class="muted">Know what's in your game library, what's missing, and keep it tidy.</p>
+        </div>
+    </div>
+
+    <dl class="about-facts">
+        <dt>Version</dt>
+        <dd>
+            @Version
+            @if (Commit is { } commit)
+            {
+                <span class="muted small"> · built from <a href="@($"{Repository}/commit/{commit}")" target="_blank" rel="noopener">@commit[..Math.Min(7, commit.Length)]</a></span>
+            }
+            <span class="muted small"> · <a href="settings/help/CHANGELOG">What's new</a></span>
+        </dd>
+        @if (_server is { } server && server.Version.Split('+')[0] != Version)
+        {
+            <dt>Server</dt>
+            <dd>@server.Version.Split('+')[0] <span class="muted small">· this page is from another version; reload it</span></dd>
+        }
+        <dt>API</dt>
+        <dd>@(_server?.ApiVersion ?? "v1") <span class="muted small">· <a href="api/docs" target="_blank" rel="noopener">reference</a></span></dd>
+        @if (_server is { Contracts.Count: > 0 } withContracts)
+        {
+            <dt>Plugin contracts</dt>
+            <dd>@string.Join(" · ", withContracts.Contracts.Select(c => $"{c.Key} {c.Value}"))</dd>
+        }
+        <dt>Made by</dt>
+        <dd><a href="https://github.com/joeatethebeans" target="_blank" rel="noopener">joeatethebeans</a>, with Claude</dd>
+        <dt>Licence</dt>
+        <dd><a href="@($"{Repository}/blob/main/LICENSE")" target="_blank" rel="noopener">MIT</a>: free to use, change and share</dd>
+        <dt>Family</dt>
+        <dd>dextrd, with Melodex for music</dd>
+    </dl>
+
+    <div class="about-links">
+        <a class="button" href="@Repository" target="_blank" rel="noopener">GitHub</a>
+        <a class="button" href="@($"{Repository}/releases")" target="_blank" rel="noopener">Releases</a>
+        <a class="button" href="@($"{Repository}/issues")" target="_blank" rel="noopener">Report a problem</a>
+        <a class="button" href="settings/help">Guide</a>
+    </div>
+
+    <h3>Built on</h3>
+    @* Every plugin is named here; a test says so when one isn't. *@
+    <p class="muted small">
+        Games recognised by their hashes, from the DATs of <a href="https://no-intro.org" target="_blank" rel="noopener">No-Intro</a> and
+        <a href="https://redump.info" target="_blank" rel="noopener">Redump</a> that you put in your DAT folder.
+    </p>
+    <p class="muted small">
+        Made with <a href="https://dotnet.microsoft.com" target="_blank" rel="noopener">.NET</a>, Blazor,
+        <a href="https://sqlite.org" target="_blank" rel="noopener">SQLite</a> and
+        <a href="https://github.com/mono/taglib-sharp" target="_blank" rel="noopener">TagLib#</a>.
+    </p>
+</section>
+
+@code {
+    private const string Repository = "https://github.com/dextrd/Romdex";
+
+    // The web app is built with the core; its own version says which this page is.
+    private static readonly string? Informational = typeof(About).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+    private static readonly string Version = Informational?.Split('+')[0] ?? "";
+    private static readonly string? Commit = Informational?.Split('+') is [_, var sha] && sha.Length >= 7 ? sha : null;
+
+    private ServerVersion? _server;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _server = await Api.GetVersionAsync();
+        }
+        catch (Exception e) when (e is HttpRequestException or RomdexApiException)
+        {
+            // The rest of the page stands without it.
+        }
+    }
+}

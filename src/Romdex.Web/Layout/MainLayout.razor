@@ -1,0 +1,87 @@
+﻿@inherits LayoutComponentBase
+@implements IDisposable
+@inject AuthState Auth
+@inject Theme Theme
+@inject RomdexClient Api
+@inject NavigationManager Nav
+@inject ServerEvents Events
+@using Microsoft.JSInterop
+@inject IJSRuntime Js
+
+@* On a phone, the pages go on a line of their own under the rest, as icons with the current page's name. Elsewhere, where the pages' names don't fit on their line, they're icons. *@
+<header class="topbar" @ref="_topbar">
+    <a class="brand" href=""><Logo />Romdex</a>
+    @* Systems, Intake and Review join Activity as the phases that bring them land. *@
+    <nav class="nav">
+        <NavLink href="activity" title="Activity">@PageIcon("activity")<span class="nav-label">Activity</span></NavLink>
+    </nav>
+    <span class="spacer"></span>
+    @* Settings sits with the account, as a gear. *@
+    <NavLink href="@SettingsHref" Match="NavLinkMatch.Prefix" class="topbar-icon" title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+    </NavLink>
+    <AccountMenu />
+</header>
+
+@* The page scrolls below the top bar, so on a computer its scrollbar starts under the bar rather than beside it. *@
+<div class="page-scroll">
+    <main>
+        @Body
+    </main>
+</div>
+
+@code {
+    private static RenderFragment PageIcon(string page) =>
+        @<svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            @switch (page)
+            {
+                case "activity":
+                    <path d="M3 12h4l3-8 4 16 3-8h4" />
+                    break;
+            }
+        </svg>;
+
+    private ElementReference _topbar;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Js.InvokeVoidAsync("romdexTopbar.watch", _topbar);
+        }
+    }
+
+    // The first settings tab they may open.
+    private string SettingsHref => Auth.May(UserPermissions.Settings) ? "settings"
+        : Auth.May(UserPermissions.Users) ? "settings/users"
+        : Auth.May(UserPermissions.Keys) ? "settings/api"
+        : "settings/appearance";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Auth.Changed += Redraw;
+        Events.EnsureStarted();
+        await ApplyThemeAsync();
+    }
+
+    // Whoever signed in sees their own theme, here and next time in this browser.
+    private async Task ApplyThemeAsync()
+    {
+        if (Auth.Status?.Appearance is { } appearance)
+            await Theme.ApplyAsync(appearance);
+    }
+
+    private void Redraw() => InvokeAsync(async () =>
+    {
+        await ApplyThemeAsync();
+        StateHasChanged();
+    });
+
+    public void Dispose()
+    {
+        Auth.Changed -= Redraw;
+    }
+}

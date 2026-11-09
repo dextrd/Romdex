@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The Romdex mark: a cartridge, with its label and contacts. -->
+  <rect width="32" height="32" rx="8" fill="#2a5fb0"/>
+  <path d="M8 5.5h13l3 3V27H8z" fill="#ffffff"/>
+  <g fill="#2a5fb0">
+    <rect x="11" y="9" width="10" height="8" rx="1"/>
+    <rect x="11" y="21.5" width="1.6" height="4" rx="0.5"/>
+    <rect x="14.2" y="21.5" width="1.6" height="4" rx="0.5"/>
+    <rect x="17.4" y="21.5" width="1.6" height="4" rx="0.5"/>
+    <rect x="20.6" y="21.5" width="1.6" height="4" rx="0.5"/>
+  </g>
+</svg>

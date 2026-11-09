@@ -1,0 +1,143 @@
+@implements IDisposable
+@inject RomdexClient Api
+@inject AuthState Auth
+
+@* The app, once this browser is signed in and Romdex is set up; until then, setting it up or signing in. *@
+@if (Auth.Status is not { } status)
+{
+    @if (_error is not null)
+    {
+        <div class="auth-page"><div class="auth-card"><p class="error">@_error</p><button @onclick="LoadAsync">Try again</button></div></div>
+    }
+    else
+    {
+        <div class="boot loading"><span class="spinner"></span> Loading Romdex…</div>
+    }
+}
+else if (!status.SetUp || status is { LetIn: true, SetupFinished: false } && status.IsAdmin)
+{
+    <SetupWizard />
+}
+else if (status is { LetIn: true, SetupFinished: false })
+{
+    <PageTitle>Being set up · Romdex</PageTitle>
+    <div class="auth-page">
+        <div class="auth-card">
+            <div class="brand"><Logo />Romdex</div>
+            <h1>Nearly ready</h1>
+            <p class="muted">The admin is still setting Romdex up. Once they've finished, it opens here.</p>
+            <div class="toolbar">
+                <button @onclick="LoadAsync">Check again</button>
+                <button class="link" @onclick="SignOutAsync">Sign out</button>
+            </div>
+        </div>
+    </div>
+}
+else if (status.LetIn)
+{
+    @ChildContent
+}
+else
+{
+    <PageTitle>Sign in · Romdex</PageTitle>
+    <div class="auth-page">
+        <form class="auth-card" @onsubmit="SubmitAsync" @onsubmit:preventDefault="true">
+            <div class="brand"><Logo />Romdex</div>
+            <h1>Sign in</h1>
+
+            <label class="field">
+                <span class="field-label">Username</span>
+                <input type="text" autocomplete="username" @bind="_username" @bind:event="oninput" required autofocus />
+            </label>
+            <label class="field">
+                <span class="field-label">Password</span>
+                <input type="password" autocomplete="current-password" @bind="_password" @bind:event="oninput" required />
+            </label>
+            <label class="auth-check">
+                <input type="checkbox" @bind="_remember" />
+                <span>
+                    Remember me
+                    <span class="muted small">Stay signed in on this browser for 30 days from your last visit. Leave it off on a shared computer.</span>
+                </span>
+            </label>
+
+            @if (_error is not null) { <p class="error small">@_error</p> }
+
+            <button class="primary" type="submit" disabled="@(_busy || !Ready())">
+                @if (_busy) { <span class="spinner"></span> }
+                Sign in
+            </button>
+
+            <p class="muted small">
+                Forgotten your password? The admin can set a new one under Settings → Users. If you're the admin, start Romdex once with
+                <code>Romdex__ResetLogin=true</code> to choose a new one.
+            </p>
+        </form>
+    </div>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string _username = "";
+    private string _password = "";
+    private bool _remember;
+    private bool _busy;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Auth.Changed += OnChanged;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _error = null;
+        try
+        {
+            Auth.Set(await Api.GetAuthStatusAsync());
+        }
+        catch (Exception)
+        {
+            _error = "Romdex isn't answering. It may be starting up.";
+        }
+    }
+
+    private void OnChanged()
+    {
+        _password = "";
+        InvokeAsync(StateHasChanged);
+    }
+
+    private bool Ready() => _username.Trim().Length > 0 && _password.Length > 0;
+
+    private async Task SubmitAsync()
+    {
+        if (!Ready())
+            return;
+        _busy = true;
+        _error = null;
+        try
+        {
+            await Api.SignInAsync(new SignIn(_username, _password, _remember));
+            Auth.Set(await Api.GetAuthStatusAsync());
+        }
+        catch (RomdexApiException e)
+        {
+            _error = e.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task SignOutAsync()
+    {
+        await Api.SignOutAsync();
+        await LoadAsync();
+    }
+
+    public void Dispose() => Auth.Changed -= OnChanged;
+}

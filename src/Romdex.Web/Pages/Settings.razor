@@ -1,0 +1,72 @@
+@page "/settings"
+@layout SettingsLayout
+@inject RomdexClient Api
+
+<PageTitle>Settings · Romdex</PageTitle>
+
+@if (_setup is null || _log is null)
+{
+    <Loading />
+}
+else
+{
+    <h2>Folders</h2>
+    <p class="muted small">Where Romdex looks, as the server sees it. They're set in the compose file, as <code>ROMS_PATH</code> and <code>DATS_PATH</code>.</p>
+    <div class="card settings-card">
+        <div class="setting-line">ROM library: <code>@_setup.LibraryPath</code>@(_setup.LibraryReadable ? "" : ", which Romdex can't open")</div>
+        <div class="setting-line">DATs: <code>@_setup.DatPath</code>, with @Format.Count(_setup.DatFiles, "DAT", "DATs")</div>
+    </div>
+
+    <h2>Log</h2>
+    <div class="card settings-card">
+        <div class="setting-line">
+            Show the last
+            <NumberField Min="1" Max="90" Label="Days" Value="_log.MemoryDays" ValueChanged="n => _log = _log with { MemoryDays = n }" />
+            days on the Log page
+        </div>
+        <div class="setting-line">
+            Keep backup files for
+            <NumberField Min="1" Max="3650" Label="Days" Value="_log.FileDays" ValueChanged="n => _log = _log with { FileDays = n }" />
+            days
+        </div>
+        <div class="muted small">Every entry is written to a file per day under <code>data/logs</code> as it happens, so a restart loses nothing. Older files are deleted.</div>
+    </div>
+
+    <div class="toolbar">
+        <button class="primary" @onclick="SaveAsync">Save</button>
+        @if (_saved) { <span class="muted small">Saved.</span> }
+        @if (_saveError is not null) { <span class="error small" title="@_saveError">@_saveError</span> }
+    </div>
+
+    <p class="muted small">Plugins (the catalogue, intake and connected apps) are set up under <a href="settings/plugins">Plugins</a>.</p>
+
+    <FactoryResetPanel />
+}
+
+@code {
+    private SetupStatus? _setup;
+    private LogSettings? _log;
+    private bool _saved;
+    private string? _saveError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _setup = await Api.GetSetupAsync();
+        _log = await Api.GetLogSettingsAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        _saved = false;
+        _saveError = null;
+        try
+        {
+            await Api.SaveLogSettingsAsync(_log!);
+            _saved = true;
+        }
+        catch (RomdexApiException e)
+        {
+            _saveError = e.Message;
+        }
+    }
+}

@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/data/
+**/node_modules/
+.git/
+.idea/
+.github/
+docs/
+# The web app carries the user guide.
+!docs/guide/
+tests/

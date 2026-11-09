@@ -1,0 +1,32 @@
+# Romdex's stack. This one file is all a server needs: paste it into a compose dashboard, or save it beside a .env
+# file, and start it.
+#
+# Settings, from the environment or a .env file beside this one:
+#   ROMS_PATH        your game library (needed)
+#   DATS_PATH        a folder of No-Intro and Redump DATs (default ./dats)
+#   ROMDEX_PORT      the port the web app is on (default 8788)
+#   ROMDEX_VERSION   the release, such as 1.0.0; latest follows each one
+#
+# Open http://your-server:8788 and setup walks you through the rest.
+# To build from source instead: docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
+#
+# The igir worker (the only thing that writes the library), the intake plugins and EmulatorJS join this file in
+# later phases. Until then Romdex only reads.
+
+services:
+  core:
+    image: ghcr.io/dextrd/romdex:${ROMDEX_VERSION:-latest}
+    container_name: romdex-core
+    ports:
+      - "${ROMDEX_PORT:-8788}:8080"
+    volumes:
+      - config:/config
+      - ${ROMS_PATH:?Set ROMS_PATH to your game library}:/roms:ro
+      - ${DATS_PATH:-./dats}:/dats:ro
+      - staging:/staging
+    # A factory reset stops Romdex for it to start afresh, so it has to come back by itself.
+    restart: unless-stopped
+
+volumes:
+  config:
+  staging:
