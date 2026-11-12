@@ -25,4 +25,16 @@ public class RomdexOptions
     /// Other users, API keys and everything else are kept. Turn it off again afterwards.
     /// </summary>
     public bool ResetLogin { get; set; }
+
+    /// <summary>How often the catalogue is updated by itself, in hours; 0 turns it off, leaving only the button.</summary>
+    public int CatalogueRefreshHours { get; set; } = 24;
+
+    /// <summary>How many files are hashed at once. Hashing big disc images is the heaviest work Romdex does.</summary>
+    public int HashThreads { get; set; } = 2;
+
+    /// <summary>MAME's chdman, which reads CHDs. The Docker image has it on the path.</summary>
+    public string ChdmanPath { get; set; } = "chdman";
+
+    /// <summary>Dolphin's command-line tool, which reads RVZs. The Docker image has it on the path.</summary>
+    public string DolphinToolPath { get; set; } = "dolphin-tool";
 }

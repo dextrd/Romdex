@@ -6,6 +6,7 @@ COPY src/Romdex.Contracts/Romdex.Contracts.csproj src/Romdex.Contracts/
 COPY src/Romdex.Client/Romdex.Client.csproj src/Romdex.Client/
 COPY src/Romdex.Web/Romdex.Web.csproj src/Romdex.Web/
 COPY src/Romdex.Plugins.DatFolder/Romdex.Plugins.DatFolder.csproj src/Romdex.Plugins.DatFolder/
+COPY src/Romdex.Plugins.Redump/Romdex.Plugins.Redump.csproj src/Romdex.Plugins.Redump/
 COPY src/Romdex.Core/Romdex.Core.csproj src/Romdex.Core/
 RUN dotnet restore src/Romdex.Core/Romdex.Core.csproj
 COPY src/ src/
@@ -21,7 +22,7 @@ RUN dotnet publish src/Romdex.Core/Romdex.Core.csproj -c Release -o /app --no-re
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 LABEL org.opencontainers.image.title="Romdex" \
-      org.opencontainers.image.description="Know what's in your game library, what's missing, and keep it tidy." \
+      org.opencontainers.image.description="Know what's in your game library, verified by hash, and keep it tidy." \
       org.opencontainers.image.source="https://github.com/dextrd/Romdex" \
       org.opencontainers.image.licenses="MIT"
 WORKDIR /app

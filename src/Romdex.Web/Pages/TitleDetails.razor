@@ -1,0 +1,94 @@
+@page "/titles/{Id:guid}"
+@inject RomdexClient Api
+
+<PageTitle>@(_title?.Name ?? "Game") · Romdex</PageTitle>
+
+@if (_notFound)
+{
+    <div class="empty card">No such game. It may have left the catalogue with its DAT. <a href="">Library</a></div>
+}
+else if (_title is null)
+{
+    <Loading />
+}
+else
+{
+    var held = _title.Dumps.Where(d => d.Status != DumpStatus.Missing).ToList();
+    var others = _title.Dumps.Where(d => d.Status == DumpStatus.Missing).ToList();
+    <p class="small"><a href="">Library</a> / <a href="systems/@_title.SystemId">@_title.SystemName</a></p>
+    <h1>@_title.Name</h1>
+    @if (_title.Status != TitleStatus.Missing)
+    {
+        <p><span class="badge @Format.Badge(_title.Status)">@Format.Label(_title.Status)</span></p>
+    }
+
+    @if (held.Count == 0)
+    {
+        <div class="empty card">Not in the library.</div>
+    }
+    else
+    {
+        <h2>In your library</h2>
+        <div class="card">
+            @foreach (var dump in held) { @Dump(dump) }
+        </div>
+    }
+
+    @if (others.Count > 0)
+    {
+        <details open="@(held.Count == 0)">
+            <summary>@(held.Count == 0 ? "Dumps the DAT lists" : $"Other dumps the DAT lists ({others.Count})")</summary>
+            <div class="card">
+                @foreach (var dump in others) { @Dump(dump) }
+            </div>
+        </details>
+    }
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private TitleDetail? _title;
+    private bool _notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _title = await Api.GetTitleAsync(Id);
+        _notFound = _title is null;
+    }
+
+    private static RenderFragment Dump(DumpInfo dump) => __builder =>
+    {
+        <div class="dump">
+            <div class="dump-head">
+                <span class="dump-name">@dump.Name</span>
+                @if (dump.Status != DumpStatus.Missing)
+                {
+                    <span class="badge @Format.Badge(dump.Status)">@(dump.Status == DumpStatus.Good ? "Verified" : dump.Status.ToString())</span>
+                }
+            </div>
+            <div class="muted small">
+                @string.Join(", ", dump.Regions)@(dump.Languages.Count > 0 ? $" · {string.Join(", ", dump.Languages)}" : "")
+                @if (dump.Serial is not null) { <span> · @dump.Serial</span> }
+                @if (dump.Kinds.Count > 0) { <span> · @string.Join(", ", dump.Kinds)</span> }
+            </div>
+            <div class="dump-files">
+                @foreach (var file in dump.Files)
+                {
+                    <div class="file">
+                        <span>@file.Name</span> <span class="muted">@Format.Size(file.Size)</span>
+                        <div class="hashes">
+                            @if (file.Crc32 is not null) { <code title="CRC32">@file.Crc32</code> }
+                            @if (file.Sha1 is not null) { <code title="SHA-1">@file.Sha1</code> }
+                            else if (file.Md5 is not null) { <code title="MD5">@file.Md5</code> }
+                        </div>
+                        @foreach (var place in file.Library)
+                        {
+                            <div class="muted">In the library as <code>@place.Path@(place.Entry is null ? "" : $" → {place.Entry}")</code></div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    };
+}

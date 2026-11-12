@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Romdex.Plugins.Redump</RootNamespace>
+    <Description>Romdex index plugin that fetches Redump's DATs for the disc systems you choose.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Romdex.Contracts\Romdex.Contracts.csproj" />
+    <ProjectReference Include="..\Romdex.Plugins.DatFolder\Romdex.Plugins.DatFolder.csproj" />
+  </ItemGroup>
+
+</Project>

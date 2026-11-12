@@ -1,0 +1,35 @@
+@* Games in the library with where each stands: a system's, or every system's with a column saying which. *@
+
+<div class="card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Game</th>
+                @if (Systems is not null) { <th class="hide-narrow">System</th> }
+                <th>Status</th>
+                <th class="hide-narrow">Dump</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var title in Titles)
+            {
+                <tr @key="title.Id">
+                    <td><a href="titles/@title.Id">@title.Name</a></td>
+                    @if (Systems is not null)
+                    {
+                        <td class="hide-narrow small nowrap"><a class="muted" href="systems/@title.SystemId">@Systems.GetValueOrDefault(title.SystemId)</a></td>
+                    }
+                    <td><span class="badge @Format.Badge(title.Status)">@Format.Label(title.Status)</span></td>
+                    <td class="hide-narrow muted small">@((title.Have ?? title.Preferred).Name)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<TitleSummary> Titles { get; set; } = [];
+
+    /// <summary>System names by ID, to list every system's games together; null for one system's.</summary>
+    [Parameter] public IReadOnlyDictionary<Guid, string>? Systems { get; set; }
+}

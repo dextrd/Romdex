@@ -16,6 +16,8 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.14" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.18.3" />
+    <PackageReference Include="SharpCompress" Version="0.50.8" />
+    <PackageReference Include="System.IO.Hashing" Version="10.0.14" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +25,7 @@
     <ProjectReference Include="..\Romdex.Client\Romdex.Client.csproj" />
     <ProjectReference Include="..\Romdex.Web\Romdex.Web.csproj" />
     <ProjectReference Include="..\Romdex.Plugins.DatFolder\Romdex.Plugins.DatFolder.csproj" />
+    <ProjectReference Include="..\Romdex.Plugins.Redump\Romdex.Plugins.Redump.csproj" />
   </ItemGroup>
 
 </Project>

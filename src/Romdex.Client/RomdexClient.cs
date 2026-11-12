@@ -79,6 +79,127 @@ public sealed class RomdexClient(HttpClient http)
         await EnsureAsync(response, ct);
     }
 
+    // ---- Catalogue ----
+
+    public async Task<IReadOnlyList<SystemSummary>> ListSystemsAsync(CancellationToken ct = default) =>
+        await http.GetFromJsonAsync<List<SystemSummary>>($"{Api}/systems", RomdexJson.Options, ct) ?? [];
+
+    public Task<SystemSummary?> GetSystemAsync(Guid id, CancellationToken ct = default) => GetOrNullAsync<SystemSummary>($"{Api}/systems/{id}", ct);
+
+    /// <summary>Titles by name; with <c>have</c>, only those the library has some of: owned, partial or bad, ignored or not.</summary>
+    public async Task<TitlePage> ListTitlesAsync(Guid systemId, TitleStatus? status = null, string? q = null, bool ignored = false, bool hidden = false,
+        int skip = 0, int take = 100, bool have = false, CancellationToken ct = default) =>
+        (await http.GetFromJsonAsync<TitlePage>($"{Api}/systems/{systemId}/titles?{TitleQuery(status, q, ignored, hidden, have, skip, take)}", RomdexJson.Options, ct))!;
+
+    private static string TitleQuery(TitleStatus? status, string? q, bool ignored, bool hidden, bool have, int skip, int take)
+    {
+        var query = new List<string> { $"skip={skip}", $"take={take}" };
+        if (status is { } s)
+            query.Add($"status={s}");
+        if (!string.IsNullOrWhiteSpace(q))
+            query.Add($"q={Uri.EscapeDataString(q)}");
+        if (ignored)
+            query.Add("ignored=true");
+        if (hidden)
+            query.Add("hidden=true");
+        if (have)
+            query.Add("have=true");
+        return string.Join('&', query);
+    }
+
+    /// <summary>Titles by name; with <c>have</c>, only those the library has some of: owned, partial or bad, ignored or not.</summary>
+    public async Task<TitlePage> ListAllTitlesAsync(TitleStatus? status = null, string? q = null, bool ignored = false, int skip = 0, int take = 100,
+        bool have = false, CancellationToken ct = default) =>
+        (await http.GetFromJsonAsync<TitlePage>($"{Api}/titles?{TitleQuery(status, q, ignored, false, have, skip, take)}", RomdexJson.Options, ct))!;
+
+    public async Task<BiosList> ListBiosAsync(Guid systemId, CancellationToken ct = default) =>
+        (await http.GetFromJsonAsync<BiosList>($"{Api}/systems/{systemId}/bios", RomdexJson.Options, ct))!;
+
+    public async Task<string> GetSystemReportAsync(Guid systemId, CancellationToken ct = default) =>
+        await http.GetStringAsync($"{Api}/systems/{systemId}/report.csv", ct);
+
+    public async Task<SystemPreferencesInfo> GetSystemPreferencesAsync(Guid systemId, CancellationToken ct = default) =>
+        (await http.GetFromJsonAsync<SystemPreferencesInfo>($"{Api}/systems/{systemId}/preferences", RomdexJson.Options, ct))!;
+
+    public async Task<SystemPreferencesInfo> SetSystemPreferencesAsync(Guid systemId, SystemPreferences preferences, CancellationToken ct = default)
+    {
+        using var response = await http.PutAsJsonAsync($"{Api}/systems/{systemId}/preferences", preferences, RomdexJson.Options, ct);
+        await EnsureAsync(response, ct);
+        return (await response.Content.ReadFromJsonAsync<SystemPreferencesInfo>(RomdexJson.Options, ct))!;
+    }
+
+    public async Task<SystemPreferencesInfo> ResetSystemPreferencesAsync(Guid systemId, CancellationToken ct = default)
+    {
+        using var response = await http.DeleteAsync($"{Api}/systems/{systemId}/preferences", ct);
+        await EnsureAsync(response, ct);
+        return (await response.Content.ReadFromJsonAsync<SystemPreferencesInfo>(RomdexJson.Options, ct))!;
+    }
+
+    public async Task<SystemPreferences> GetDefaultPreferencesAsync(CancellationToken ct = default) =>
+        (await http.GetFromJsonAsync<SystemPreferences>($"{Api}/preferences", RomdexJson.Options, ct))!;
+
+    public async Task SetDefaultPreferencesAsync(SystemPreferences preferences, CancellationToken ct = default)
+    {
+        using var response = await http.PutAsJsonAsync($"{Api}/preferences", preferences, RomdexJson.Options, ct);
+        await EnsureAsync(response, ct);
+    }
+
+    public Task<TitleDetail?> GetTitleAsync(Guid id, CancellationToken ct = default) => GetOrNullAsync<TitleDetail>($"{Api}/titles/{id}", ct);
+
+    public async Task<TitleDetail> IgnoreTitleAsync(Guid id, bool ignore = true, CancellationToken ct = default)
+    {
+        using var response = ignore ? await http.PostAsync($"{Api}/titles/{id}/ignore", null, ct) : await http.DeleteAsync($"{Api}/titles/{id}/ignore", ct);
+        await EnsureAsync(response, ct);
+        return (await response.Content.ReadFromJsonAsync<TitleDetail>(RomdexJson.Options, ct))!;
+    }
+
+    public async Task<TitleDetail> ChoosePreferredAsync(Guid id, Guid? dumpId, CancellationToken ct = default)
+    {
+        using var response = await http.PutAsJsonAsync($"{Api}/titles/{id}/preferred", new ChoosePreferred(dumpId), RomdexJson.Options, ct);
+        await EnsureAsync(response, ct);
+        return (await response.Content.ReadFromJsonAsync<TitleDetail>(RomdexJson.Options, ct))!;
+    }
+
+    /// <summary>
+    /// Every game the DATs list, in the library or not, whose name has every word of <paramref name="q"/>, closest first;
+    /// <paramref name="have"/> keeps to games the library has (true) or hasn't (false).
+    /// </summary>
+    public async Task<TitlePage> SearchCatalogueAsync(string q, Guid? systemId = null, bool? have = null, int skip = 0, int take = 50,
+        CancellationToken ct = default)
+    {
+        var query = $"q={Uri.EscapeDataString(q)}&skip={skip}&take={take}";
+        if (systemId is { } id)
+            query += $"&system={id}";
+        if (have is { } h)
+            query += $"&have={(h ? "true" : "false")}";
+        return (await http.GetFromJsonAsync<TitlePage>($"{Api}/catalogue/search?{query}", RomdexJson.Options, ct))!;
+    }
+
+    public async Task<TaskInfo> RefreshCatalogueAsync(CancellationToken ct = default)
+    {
+        using var response = await http.PostAsync($"{Api}/catalogue/refresh", null, ct);
+        await EnsureAsync(response, ct);
+        return (await response.Content.ReadFromJsonAsync<TaskInfo>(RomdexJson.Options, ct))!;
+    }
+
+    // ---- Library ----
+
+    public async Task<LibraryStatus> GetLibraryStatusAsync(CancellationToken ct = default) =>
+        (await http.GetFromJsonAsync<LibraryStatus>($"{Api}/library", RomdexJson.Options, ct))!;
+
+    public async Task<TaskInfo> ScanLibraryAsync(CancellationToken ct = default)
+    {
+        using var response = await http.PostAsync($"{Api}/library/scan", null, ct);
+        await EnsureAsync(response, ct);
+        return (await response.Content.ReadFromJsonAsync<TaskInfo>(RomdexJson.Options, ct))!;
+    }
+
+    public async Task<TitlePage> ListMissingAsync(int skip = 0, int take = 100, CancellationToken ct = default) =>
+        (await http.GetFromJsonAsync<TitlePage>($"{Api}/library/missing?skip={skip}&take={take}", RomdexJson.Options, ct))!;
+
+    public async Task<UnknownPage> ListUnknownAsync(int skip = 0, int take = 100, CancellationToken ct = default) =>
+        (await http.GetFromJsonAsync<UnknownPage>($"{Api}/library/unknown?skip={skip}&take={take}", RomdexJson.Options, ct))!;
+
     // ---- Stopping and ordering tasks ----
 
     public Task CancelTaskAsync(Guid id, CancellationToken ct = default) => PostAsync($"{Api}/tasks/{id}/cancel", null, ct);

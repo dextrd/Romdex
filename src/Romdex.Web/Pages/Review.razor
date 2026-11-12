@@ -1,0 +1,75 @@
+@page "/review"
+@inject RomdexClient Api
+
+<PageTitle>Review · Romdex</PageTitle>
+
+<h1>Review</h1>
+<p class="muted">
+    Files in the library that match nothing in the catalogue, and files that couldn't be read. One with a dump's name but other hashes is
+    likely a bad or modified dump of it.
+</p>
+
+@if (_page is null)
+{
+    <Loading />
+}
+else if (_page.Total == 0)
+{
+    <div class="empty card">Nothing to review. Every file in the library is one the catalogue knows.</div>
+}
+else
+{
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th class="num hide-narrow">Size</th>
+                    <th>What's wrong</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var file in _files)
+                {
+                    <tr>
+                        <td>
+                            <div>@file.Path</div>
+                            @if (file.Entry is not null) { <div class="muted small">→ @file.Entry</div> }
+                        </td>
+                        <td class="num hide-narrow">@Format.Size(file.Size)</td>
+                        <td class="small">
+                            @if (file.Error is not null) { <span class="error">@file.Error</span> }
+                            else if (file.LooksLike is not null) { <span>Named like <strong>@file.LooksLike.Name</strong>, but its hashes differ</span> }
+                            else { <span class="muted">Matches nothing</span> }
+                            @if (file.Crc32 is not null) { <div class="hashes"><code title="CRC32">@file.Crc32</code><code title="SHA-1">@file.Sha1</code></div> }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (_files.Count < _page.Total)
+    {
+        <div class="toolbar">
+            <button @onclick="MoreAsync">Show more</button>
+            <span class="muted small">@_files.Count.ToString("N0") of @_page.Total.ToString("N0")</span>
+        </div>
+    }
+}
+
+@code {
+    private UnknownPage? _page;
+    private List<UnknownFile> _files = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _page = await Api.ListUnknownAsync();
+        _files = [.. _page.Items];
+    }
+
+    private async Task MoreAsync()
+    {
+        _page = await Api.ListUnknownAsync(_files.Count);
+        _files.AddRange(_page.Items);
+    }
+}

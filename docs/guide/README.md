@@ -1,6 +1,6 @@
 # Romdex guide
 
-Romdex knows what's in your game library and what's missing from it. It recognises every file by its hash, against
+Romdex manages your game library: it knows what every file is, and whether it's a good dump. It recognises every file by its hash, against
 the No-Intro and Redump DATs you give it, and (in later versions) brings new dumps in, files them, and keeps the library
 tidy. It's part of the dextrd family, alongside Melodex for music.
 

@@ -2,7 +2,7 @@ using Romdex.Contracts.Plugins;
 
 namespace Romdex.Core.Data;
 
-// Work entities, filled by the core. The catalogue and library entities come with Phase 1.
+// Work entities, filled by the core. The catalogue is in Catalogue.cs, the library in Library.cs.
 
 /// <summary>A configured plugin.</summary>
 public class PluginInstance

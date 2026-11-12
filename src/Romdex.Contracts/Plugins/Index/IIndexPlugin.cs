@@ -43,8 +43,9 @@ public sealed record IndexSystemDetail(IndexSystem System, IReadOnlyList<IndexDu
 /// <param name="Serial">The product serial, where the DAT gives one.</param>
 /// <param name="IsBios">A BIOS or firmware, which other dumps of the system may need to run.</param>
 /// <param name="Description">The DAT's description of it, where that differs from its name.</param>
+/// <param name="Category">The DAT's category for it, where it gives one, such as Redump's <c>Games</c>, <c>Demos</c> or <c>Preproduction</c>.</param>
 public sealed record IndexDump(string Name, string? CloneOf, IReadOnlyList<IndexDumpFile> Files, string? Serial = null, bool IsBios = false,
-    string? Description = null);
+    string? Description = null, string? Category = null);
 
 /// <summary>One file of a dump: a cartridge image, or a disc's cue sheet or one of its tracks.</summary>
 /// <param name="Name">The file's name in the DAT.</param>

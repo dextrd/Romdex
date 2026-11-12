@@ -28,6 +28,33 @@ a file is without trusting its name.
   [redump.info](https://redump.info).
 
 Drop them into your DAT folder as they come, zipped or not. When there are two DATs for the same system, Romdex uses
-the newest.
+the newest. Redump's can be fetched for you instead: see [Plugins](plugins.md).
+
+## Your library
+
+**Library**, the home page, has two views. **Systems** lists every system you have games for; **Games** lists every
+game in the library together, to filter and search. **Update catalogue** reads the DATs again (Romdex also does this
+by itself once a day), and **Scan library** reads your library. A scan hashes each file once; later scans only hash
+what's new or changed.
+
+A file counts only when its checksums match a dump in the DAT, whatever it's called. Files can be loose, zipped,
+7-Zipped or in CHDs. A disc counts when every track does, and a game of several discs when every disc does.
+
+- **Verified**: every file of a dump of the game matches the DAT.
+- **Partial**: you have some discs of it, but not all.
+- **Bad**: you have files of it that don't verify, such as a disc with a track missing, or a file named like a dump
+  but with other checksums.
+
+A game's page shows the dump you have, with each file's checksums and where it is, and the other dumps the DAT lists
+for it, such as other regions and revisions.
+
+**Search** finds any game the DATs list, whether or not you have it. Words can come in any order, and regions and
+versions count too, so *kart japan* finds the Japanese releases of a kart game. A game's page shows its dumps with
+their checksums.
+
+**Review** lists the files that match nothing, and any that couldn't be read.
+
+Reading inside a CHD needs `chdman`, and inside an RVZ needs `dolphin-tool`. Until they're part of Romdex's
+containers, such files are listed under Review as unreadable.
 
 Next: [Users and permissions](users-and-permissions.md).

@@ -19,7 +19,7 @@ public sealed class QueueTests : IDisposable
     public QueueTests()
     {
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder
-            .UseSetting("Romdex:DataPath", _dataPath)
+            .UseSetting("Romdex:DataPath", _dataPath).UseSetting("Romdex:CatalogueRefreshHours", "0")
             .ConfigureServices(services => services.AddScoped<ITaskHandler, Echo>()));
         _api = new RomdexClient(_factory.CreateSignedInClient());
     }

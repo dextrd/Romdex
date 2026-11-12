@@ -1,0 +1,135 @@
+@page "/systems/{Id:guid}"
+@implements IDisposable
+@inject RomdexClient Api
+@inject ServerEvents Events
+
+<PageTitle>@(_system?.Name ?? "System") · Romdex</PageTitle>
+
+@if (_notFound)
+{
+    <div class="empty card">No such system. It may have left the catalogue with its DAT. <a href="">Library</a></div>
+}
+else if (_system is null)
+{
+    <Loading />
+}
+else
+{
+    <p class="small"><a href="">Library</a></p>
+    <h1>@_system.Name</h1>
+    <p class="muted small">Checked against @(_system.Source == "other" ? "its DAT" : $"{_system.Source}'s DAT"), version @_system.DatVersion@(_system.DatDate is { } date ? $" of {date:d MMM yyyy}" : "").</p>
+    <div class="counts small">
+        <span>@Format.Count(_system.Owned + _system.Partial + _system.Bad, "game", "games")</span>
+        @if (_system.Partial > 0) { <span>@_system.Partial.ToString("N0") partial</span> }
+        @if (_system.Bad > 0) { <span>@_system.Bad.ToString("N0") bad</span> }
+    </div>
+
+    <div class="toolbar">
+        <Segmented T="string" Value="_filter" Options="GameFilters.Options" OnChange="FilterAsync" Label="Show" />
+        <input type="search" placeholder="Search games" value="@_query" @oninput="SearchAsync" />
+    </div>
+
+    @if (_page is null)
+    {
+        <Loading />
+    }
+    else if (_page.Total == 0)
+    {
+        <div class="empty card">@(_query.Length > 0 ? "Nothing matches." : _filter == "All" ? "None of this system's games are in the library." : "Nothing here.")</div>
+    }
+    else
+    {
+        <TitleTable Titles="_titles" />
+        @if (_titles.Count < _page.Total)
+        {
+            <div class="toolbar">
+                <button @onclick="MoreAsync">Show more</button>
+                <span class="muted small">@_titles.Count.ToString("N0") of @_page.Total.ToString("N0")</span>
+            </div>
+        }
+    }
+
+    @if (_bios.Count > 0)
+    {
+        <h2>BIOS and firmware</h2>
+        <p class="muted small">The system's BIOS files in the library. Emulators need some of these to start games.</p>
+        <div class="card">
+            <table class="table">
+                <tbody>
+                    @foreach (var bios in _bios)
+                    {
+                        <tr>
+                            <td>@bios.Name</td>
+                            <td><span class="badge @Format.Badge(bios.Status)">@(bios.Status == DumpStatus.Good ? "Verified" : bios.Status.ToString())</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private const int PageSize = 100;
+
+    private SystemSummary? _system;
+    private bool _notFound;
+    private IReadOnlyList<DumpInfo> _bios = [];
+    private TitlePage? _page;
+    private List<TitleSummary> _titles = [];
+    private string _filter = "All";
+    private string _query = "";
+    private int _search;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Events.Received -= OnEvent;
+        Events.Received += OnEvent;
+        await LoadAsync();
+    }
+
+    private void OnEvent(string type)
+    {
+        if (type is "tasks")
+            InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+    }
+
+    private async Task LoadAsync()
+    {
+        _system = await Api.GetSystemAsync(Id);
+        _notFound = _system is null;
+        if (_system is null)
+            return;
+        _bios = (await Api.ListBiosAsync(Id)).Items.Where(b => b.Status != DumpStatus.Missing).ToList();
+        await LoadTitlesAsync(Math.Max(_titles.Count, PageSize));
+    }
+
+    private async Task LoadTitlesAsync(int take, int skip = 0)
+    {
+        var page = await Api.ListTitlesAsync(Id, GameFilters.StatusOf(_filter), _query, skip: skip, take: take, have: true);
+        _page = page;
+        _titles = skip == 0 ? [.. page.Items] : [.. _titles, .. page.Items];
+    }
+
+    private async Task FilterAsync(string value)
+    {
+        _filter = value;
+        await LoadTitlesAsync(PageSize);
+    }
+
+    // Typing searches once it pauses.
+    private async Task SearchAsync(ChangeEventArgs e)
+    {
+        _query = e.Value as string ?? "";
+        var search = ++_search;
+        await Task.Delay(250);
+        if (search == _search)
+            await LoadTitlesAsync(PageSize);
+    }
+
+    private Task MoreAsync() => LoadTitlesAsync(PageSize, _titles.Count);
+
+    public void Dispose() => Events.Received -= OnEvent;
+}

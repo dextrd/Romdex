@@ -1,0 +1,10 @@
+@* Which of the library's games to list, shared by the Library and a system's page. *@
+@code {
+    public static readonly IReadOnlyList<(string Value, string Label, string? Hint)> Options =
+    [
+        ("All", "All", null), ("Owned", "Verified", "Every file matches the DAT"), ("Partial", "Partial", "Some discs of it"),
+        ("Bad", "Bad", "Files of it that don't verify"),
+    ];
+
+    public static TitleStatus? StatusOf(string filter) => Enum.TryParse<TitleStatus>(filter, out var s) ? s : null;
+}

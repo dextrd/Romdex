@@ -75,6 +75,13 @@ public partial class RomdexDbContext(DbContextOptions<RomdexDbContext> options) 
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     public DbSet<Webhook> Webhooks => Set<Webhook>();
     public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
+    public DbSet<CatalogueSystem> Systems => Set<CatalogueSystem>();
+    public DbSet<Title> Titles => Set<Title>();
+    public DbSet<Dump> Dumps => Set<Dump>();
+    public DbSet<DumpFile> DumpFiles => Set<DumpFile>();
+    public DbSet<LibraryFile> LibraryFiles => Set<LibraryFile>();
+    public DbSet<LibraryContent> LibraryContents => Set<LibraryContent>();
+    public DbSet<LibraryMatch> LibraryMatches => Set<LibraryMatch>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -111,11 +118,61 @@ public partial class RomdexDbContext(DbContextOptions<RomdexDbContext> options) 
             e.HasIndex(d => new { d.WebhookId, d.CreatedAt });
         });
 
+        modelBuilder.Entity<CatalogueSystem>(e =>
+        {
+            e.HasIndex(s => s.Name).IsUnique();
+            e.HasOne<PluginInstance>().WithMany().HasForeignKey(s => s.PluginInstanceId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne<CatalogueSystem>().WithMany().HasForeignKey(s => s.BiosForId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Title>(e =>
+        {
+            e.HasOne(t => t.System).WithMany(s => s.Titles).HasForeignKey(t => t.SystemId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(t => new { t.SystemId, t.Key }).IsUnique();
+        });
+
+        modelBuilder.Entity<Dump>(e =>
+        {
+            e.HasOne<CatalogueSystem>().WithMany(s => s.Dumps).HasForeignKey(d => d.SystemId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(d => d.Title).WithMany(t => t.Dumps).HasForeignKey(d => d.TitleId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(d => new { d.SystemId, d.Name }).IsUnique();
+            e.HasIndex(d => d.TitleId);
+        });
+
+        modelBuilder.Entity<DumpFile>(e =>
+        {
+            e.HasOne(f => f.Dump).WithMany(d => d.Files).HasForeignKey(f => f.DumpId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(f => f.DumpId);
+            e.HasIndex(f => f.Sha1);
+            e.HasIndex(f => f.Md5);
+            e.HasIndex(f => new { f.Crc32, f.Size });
+        });
+
+        modelBuilder.Entity<LibraryFile>(e =>
+        {
+            e.HasIndex(f => f.Path).IsUnique();
+        });
+
+        modelBuilder.Entity<LibraryContent>(e =>
+        {
+            e.HasOne(c => c.File).WithMany(f => f.Contents).HasForeignKey(c => c.LibraryFileId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(c => c.LibraryFileId);
+        });
+
+        modelBuilder.Entity<LibraryMatch>(e =>
+        {
+            e.HasKey(m => new { m.ContentId, m.DumpFileId });
+            e.HasOne(m => m.Content).WithMany(c => c.Matches).HasForeignKey(m => m.ContentId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(m => m.DumpFile).WithMany().HasForeignKey(m => m.DumpFileId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(m => m.DumpFileId);
+        });
+
         // Store enums as their names so the database stays readable and reordering members is safe.
         foreach (var property in modelBuilder.Model.GetEntityTypes().SelectMany(t => t.GetProperties()))
         {
             var type = Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType;
-            if (type.IsEnum)
+            // Flags stay numbers, so they can be combined and tested.
+            if (type.IsEnum && !type.IsDefined(typeof(FlagsAttribute), false))
                 property.SetProviderClrType(typeof(string));
         }
     }

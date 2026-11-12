@@ -22,7 +22,7 @@ public sealed class SetupTests : IDisposable
     public SetupTests()
     {
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder
-            .UseSetting("Romdex:DataPath", _dataPath)
+            .UseSetting("Romdex:DataPath", _dataPath).UseSetting("Romdex:CatalogueRefreshHours", "0")
             .UseSetting("Romdex:LibraryPath", Path.Combine(_dataPath, "roms"))
             .UseSetting("Romdex:DatPath", TestRepository.Dats));
     }

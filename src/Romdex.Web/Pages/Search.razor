@@ -1,0 +1,167 @@
+@page "/search"
+@inject RomdexClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Search · Romdex</PageTitle>
+
+<h1>Search</h1>
+
+<div class="toolbar">
+    <input class="search-box" type="search" placeholder="Search every game the DATs list" aria-label="Search" value="@_query" @oninput="TypedAsync" @ref="_box" />
+    @if (_systems.Count > 1)
+    {
+        <select aria-label="System" @onchange="SystemAsync">
+            <option value="" selected="@(_system is null)">All systems</option>
+            @foreach (var system in _systems)
+            {
+                <option value="@system.Id" selected="@(_system == system.Id)">@system.Name</option>
+            }
+        </select>
+    }
+    <Segmented T="string" Value="_have" Options="HaveOptions" OnChange="HaveAsync" Label="In your library" />
+</div>
+
+@if (_error is not null)
+{
+    <div class="notice error">@_error</div>
+}
+else if (_systems.Count == 0 && _loaded)
+{
+    <div class="empty card">There's nothing to search yet. Search uses the catalogue: add DATs, then update it from the Library.</div>
+}
+else if (_page is null)
+{
+    <div class="empty card">
+        Search for any game the catalogue's DATs list, whether or not it's in your library. Words can come in any order, and a game's
+        regions and versions count too: <em>kart japan</em> finds the Japanese releases of a kart game.
+    </div>
+}
+else if (_page.Total == 0)
+{
+    <div class="empty card">No games match@(_have != "" || _system is not null ? " with these filters" : "").</div>
+}
+else
+{
+    <p class="muted small">@Format.Count(_page.Total, "game", "games")</p>
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Game</th>
+                    <th class="hide-narrow">System</th>
+                    <th>In your library</th>
+                    <th class="hide-narrow">Dumps</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var title in _titles)
+                {
+                    <tr @key="title.Id">
+                        <td><a href="titles/@title.Id">@title.Name</a></td>
+                        <td class="hide-narrow small nowrap"><a class="muted" href="systems/@title.SystemId">@_names.GetValueOrDefault(title.SystemId)</a></td>
+                        <td>
+                            @if (title.Status == TitleStatus.Missing) { <span class="muted small">No</span> }
+                            else { <span class="badge @Format.Badge(title.Status)">@Format.Label(title.Status)</span> }
+                        </td>
+                        <td class="hide-narrow muted small" title="@((title.Have ?? title.Preferred).Name)">
+                            @Format.Count(title.Dumps, "dump", "dumps")@(Regions(title) is { Length: > 0 } regions ? $" · {regions}" : "")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (_titles.Count < _page.Total)
+    {
+        <div class="toolbar">
+            <button @onclick="MoreAsync">Show more</button>
+            <span class="muted small">@_titles.Count.ToString("N0") of @_page.Total.ToString("N0")</span>
+        </div>
+    }
+}
+
+@code {
+    private const int PageSize = 50;
+    private static readonly IReadOnlyList<(string Value, string Label, string? Hint)> HaveOptions =
+        [("", "All", null), ("yes", "Have", "Games in your library"), ("no", "Don't have", "Games that aren't")];
+
+    [SupplyParameterFromQuery(Name = "q")] public string? QueryParameter { get; set; }
+
+    private ElementReference _box;
+    private bool _loaded;
+    private IReadOnlyList<SystemSummary> _systems = [];
+    private IReadOnlyDictionary<Guid, string> _names = new Dictionary<Guid, string>();
+    private string _query = "";
+    private Guid? _system;
+    private string _have = "";
+    private TitlePage? _page;
+    private List<TitleSummary> _titles = [];
+    private string? _error;
+    private int _search;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _systems = await Api.ListSystemsAsync();
+        _names = _systems.ToDictionary(s => s.Id, s => s.Name);
+        _query = QueryParameter ?? "";
+        _loaded = true;
+        await SearchAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await _box.FocusAsync();
+    }
+
+    // The regions of the dump you have, or else of the one 1G1R prefers.
+    private static string Regions(TitleSummary title) => string.Join(", ", (title.Have ?? title.Preferred).Regions);
+
+    // Typing searches once it pauses, and the address keeps the search so it can be shared or gone back to.
+    private async Task TypedAsync(ChangeEventArgs e)
+    {
+        _query = e.Value as string ?? "";
+        var search = ++_search;
+        await Task.Delay(300);
+        if (search != _search)
+            return;
+        Nav.NavigateTo(_query.Trim().Length == 0 ? "search" : $"search?q={Uri.EscapeDataString(_query.Trim())}", replace: true);
+        await SearchAsync();
+    }
+
+    private Task SystemAsync(ChangeEventArgs e)
+    {
+        _system = Guid.TryParse(e.Value as string, out var id) ? id : null;
+        return SearchAsync();
+    }
+
+    private Task HaveAsync(string value)
+    {
+        _have = value;
+        return SearchAsync();
+    }
+
+    private async Task SearchAsync(int skip = 0)
+    {
+        _error = null;
+        if (_query.Trim().Length == 0)
+        {
+            _page = null;
+            _titles = [];
+            return;
+        }
+        try
+        {
+            var have = _have switch { "yes" => true, "no" => false, _ => (bool?)null };
+            var page = await Api.SearchCatalogueAsync(_query.Trim(), _system, have, skip, PageSize);
+            _page = page;
+            _titles = skip == 0 ? [.. page.Items] : [.. _titles, .. page.Items];
+        }
+        catch (HttpRequestException e)
+        {
+            _error = $"Couldn't search: {e.Message}";
+        }
+    }
+
+    private Task MoreAsync() => SearchAsync(_titles.Count);
+}

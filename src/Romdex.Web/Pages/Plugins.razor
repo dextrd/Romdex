@@ -20,8 +20,8 @@ else
 
     <div class="plugin-sections">
         @Section(PluginType.Index, "Catalogue",
-            "Where Romdex learns every verified dump of each system, from DATs, to tell what you have and what's missing. Romdex asks these in order and keeps the first match.",
-            "No catalogue. Romdex can list your files, but can't tell what any of them are or what's missing until you add one.")
+            "Where Romdex learns every verified dump of each system, from DATs, to tell what each of your files is. Romdex asks these in order and keeps the first match.",
+            "No catalogue. Romdex can list your files, but can't tell what any of them are until you add one.")
         @Section(PluginType.Intake, "Intake",
             "Intake plugins run in their own containers and offer new dumps, such as files dropped into an inbox folder. Each is checked by its hash before it's filed.",
             "No intake yet. Your library is still read, but nothing new comes in through Romdex.")
@@ -87,7 +87,7 @@ else
             <p>Its settings are forgotten. You can add it again later.</p>
             @if (removing.Type == PluginType.Index && _plugins.Count(p => p.Type == PluginType.Index) == 1)
             {
-                <p>It's your only catalogue. Without one, Romdex can't tell what your files are or what's missing until you add one.</p>
+                <p>It's your only catalogue. Without one, Romdex can't tell what your files are until you add one.</p>
             }
             <div class="toolbar dialog-buttons">
                 <button @onclick="() => _removing = null">Cancel</button>

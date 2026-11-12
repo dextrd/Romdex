@@ -20,6 +20,7 @@
     <ProjectReference Include="..\..\src\Romdex.Core\Romdex.Core.csproj" />
     <ProjectReference Include="..\..\src\Romdex.Contracts\Romdex.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Romdex.Plugins.DatFolder\Romdex.Plugins.DatFolder.csproj" />
+    <ProjectReference Include="..\..\src\Romdex.Plugins.Redump\Romdex.Plugins.Redump.csproj" />
   </ItemGroup>
 
 </Project>

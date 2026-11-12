@@ -46,6 +46,9 @@ public static class Logiqx
     public static IReadOnlyList<IndexDump> ReadDumps(Stream stream, CancellationToken ct)
     {
         var dumps = new List<IndexDump>();
+        // No-Intro's newer DATs name a clone's parent by its id rather than by name, so ids are resolved at the end.
+        var ids = new Dictionary<string, string>(StringComparer.Ordinal);
+        var parentIds = new Dictionary<int, string>();
         using var reader = XmlReader.Create(stream, Settings);
         while (reader.Read())
         {
@@ -53,8 +56,12 @@ public static class Logiqx
                 continue;
             ct.ThrowIfCancellationRequested();
             var cloneOf = reader.GetAttribute("cloneof");
+            if (reader.GetAttribute("id") is { Length: > 0 } id)
+                ids[id] = name;
+            if (string.IsNullOrEmpty(cloneOf) && reader.GetAttribute("cloneofid") is { Length: > 0 } parentId)
+                parentIds[dumps.Count] = parentId;
             var isBios = reader.GetAttribute("isbios") == "yes" || name.StartsWith("[BIOS]", StringComparison.Ordinal);
-            string? description = null, serial = null;
+            string? description = null, serial = null, category = null;
             var files = new List<IndexDumpFile>();
             using (var game = reader.ReadSubtree())
             {
@@ -82,6 +89,9 @@ public static class Logiqx
                         case "serial":
                             serial = game.ReadElementContentAsString();
                             break;
+                        case "category":
+                            category ??= game.ReadElementContentAsString();
+                            break;
                         default:
                             game.Read();
                             break;
@@ -89,8 +99,11 @@ public static class Logiqx
                 }
             }
             dumps.Add(new IndexDump(name, string.IsNullOrEmpty(cloneOf) ? null : cloneOf, files, string.IsNullOrWhiteSpace(serial) ? null : serial.Trim(),
-                isBios, description == name ? null : description));
+                isBios, description == name ? null : description, string.IsNullOrWhiteSpace(category) ? null : category.Trim()));
         }
+        foreach (var (index, parentId) in parentIds)
+            if (ids.TryGetValue(parentId, out var parent) && parent != dumps[index].Name)
+                dumps[index] = dumps[index] with { CloneOf = parent };
         return dumps;
     }
 
@@ -105,6 +118,12 @@ public static class Logiqx
             : DatSources.Other;
     }
 
+    // Redump writes its dates with dashes in the time too, such as 2026-11-09 22-03-17.
+    private static readonly string[] DateFormats = ["yyyy-MM-dd HH-mm-ss", "yyyyMMdd-HHmmss", "yyyyMMdd"];
+
     private static DateTimeOffset? DateOf(string? value) =>
-        DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var date) ? date : null;
+        value is null ? null
+        : DateTimeOffset.TryParseExact(value.Trim(), DateFormats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var exact) ? exact
+        : DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var date) ? date
+        : null;
 }

@@ -53,4 +53,24 @@ public static class Format
     };
 
     public static string Count(int n, string one, string many) => $"{n:N0} {(n == 1 ? one : many)}";
+
+    public static string Badge(TitleStatus status) => status switch
+    {
+        TitleStatus.Owned => "owned",
+        TitleStatus.Partial => "partial",
+        TitleStatus.Bad => "bad",
+        _ => "missing",
+    };
+
+    public static string Label(TitleStatus status) => status == TitleStatus.Owned ? "Verified" : status.ToString();
+
+    public static string Badge(DumpStatus status) => status switch
+    {
+        DumpStatus.Good => "owned",
+        DumpStatus.Incomplete => "partial",
+        DumpStatus.Bad => "bad",
+        _ => "missing",
+    };
+
+    public static string Label(DumpStatus status) => status == DumpStatus.Good ? "Have" : status.ToString();
 }

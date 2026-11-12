@@ -1,0 +1,216 @@
+@page "/"
+@implements IDisposable
+@inject RomdexClient Api
+@inject ServerEvents Events
+@inject NavigationManager Nav
+
+<PageTitle>Library · Romdex</PageTitle>
+
+<h1>Library</h1>
+<p class="muted">@(_view == "games"
+    ? "Every game in your library, checked against the DATs."
+    : "Every system you have games for, checked against its DAT.")</p>
+
+<div class="toolbar">
+    <Segmented T="string" Value="_view" Options="Views" OnChange="Show" Label="View" />
+    <button class="primary" disabled="@(Running("library-scan") || _systems.Count == 0)" @onclick="ScanAsync">@(Running("library-scan") ? "Scanning…" : "Scan library")</button>
+    <button disabled="@Running("catalogue-refresh")" @onclick="RefreshAsync">@(Running("catalogue-refresh") ? "Updating…" : "Update catalogue")</button>
+    @if (_status is not null)
+    {
+        <span class="muted small">
+            @Format.Count(_status.Files, "file", "files"), @Format.Size(_status.Bytes)@(_status.ScannedAt is { } at ? $", scanned {Format.Ago(at)}" : ", not scanned yet")
+            @if (_status.Unknown + _status.Unreadable > 0)
+            {
+                <span> · <a href="review">@Format.Count(_status.Unknown + _status.Unreadable, "file", "files") to review</a></span>
+            }
+        </span>
+    }
+    @if (_error is not null) { <span class="error small">@_error</span> }
+</div>
+
+@if (!_loaded)
+{
+    <Loading />
+}
+else if (_systems.Count == 0)
+{
+    <div class="empty card">
+        No catalogue yet. Put No-Intro or other Logiqx DATs in the DATs folder, or turn on Redump under <a href="settings/plugins">Plugins</a>,
+        then update the catalogue.
+    </div>
+}
+else if (_view == "games")
+{
+    <div class="toolbar">
+        <Segmented T="string" Value="_filter" Options="GameFilters.Options" OnChange="FilterAsync" Label="Show" />
+        <input type="search" placeholder="Search games" value="@_query" @oninput="SearchAsync" />
+    </div>
+    @if (_games is null)
+    {
+        <Loading />
+    }
+    else if (_games.Total == 0)
+    {
+        <div class="empty card">@(_query.Length > 0 ? "Nothing matches." : _filter == "All" ? NothingYet : "Nothing here.")</div>
+    }
+    else
+    {
+        <TitleTable Titles="_titles" Systems="_names" />
+        @if (_titles.Count < _games.Total)
+        {
+            <div class="toolbar">
+                <button @onclick="MoreAsync">Show more</button>
+                <span class="muted small">@_titles.Count.ToString("N0") of @_games.Total.ToString("N0")</span>
+            </div>
+        }
+    }
+}
+else if (Held.Count == 0)
+{
+    <div class="empty card">@NothingYet</div>
+}
+else
+{
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>System</th>
+                    <th class="num">Games</th>
+                    <th class="num hide-narrow">Partial or bad</th>
+                    <th class="hide-narrow">DAT</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var system in Held)
+                {
+                    <tr>
+                        <td><a href="systems/@system.Id">@system.Name</a></td>
+                        <td class="num">@((system.Owned + system.Partial + system.Bad).ToString("N0"))</td>
+                        <td class="num hide-narrow">@(system.Partial + system.Bad is > 0 and var problems ? problems.ToString("N0") : "")</td>
+                        <td class="hide-narrow muted small" title="@system.Source">@system.DatVersion</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (_systems.Count > Held.Count)
+    {
+        <p class="muted small">The catalogue has DATs for @Format.Count(_systems.Count - Held.Count, "other system", "other systems"), with nothing of yours yet.</p>
+    }
+}
+
+@code {
+    private const int PageSize = 100;
+    private static readonly IReadOnlyList<(string Value, string Label, string? Hint)> Views = [("systems", "Systems", null), ("games", "Games", null)];
+
+    [SupplyParameterFromQuery(Name = "view")] public string? ViewParameter { get; set; }
+
+    private string _view = "systems";
+    private bool _loaded;
+    private IReadOnlyList<SystemSummary> _systems = [];
+    private IReadOnlyDictionary<Guid, string> _names = new Dictionary<Guid, string>();
+    private LibraryStatus? _status;
+    private IReadOnlyList<TaskInfo> _active = [];
+    private string? _error;
+
+    private TitlePage? _games;
+    private List<TitleSummary> _titles = [];
+    private string _filter = "All";
+    private string _query = "";
+    private int _search;
+
+    // Systems the library has any game of.
+    private List<SystemSummary> Held => _systems.Where(s => s.Owned + s.Partial + s.Bad > 0).ToList();
+
+    private string NothingYet => _status?.ScannedAt is null
+        ? "Nothing yet. Scan the library to read your games."
+        : "None of your files match the catalogue yet. Review lists what they are.";
+
+    private bool Running(string kind) => _active.Any(t => t.Kind == kind);
+
+    protected override void OnInitialized() => Events.Received += OnEvent;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _view = ViewParameter == "games" ? "games" : "systems";
+        await LoadAsync();
+        _loaded = true;
+    }
+
+    // A scan or an update that finishes changes every number here.
+    private void OnEvent(string type)
+    {
+        if (type is "tasks" or "connected")
+            InvokeAsync(ChangedAsync);
+    }
+
+    private async Task ChangedAsync()
+    {
+        await LoadAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            _active = await Api.ListTasksAsync(active: true);
+            _systems = await Api.ListSystemsAsync();
+            _names = _systems.ToDictionary(s => s.Id, s => s.Name);
+            _status = await Api.GetLibraryStatusAsync();
+            if (_view == "games")
+                await LoadGamesAsync(Math.Max(_titles.Count, PageSize));
+        }
+        catch (HttpRequestException)
+        {
+            // Keep what's shown; the next event tries again.
+        }
+    }
+
+    private async Task LoadGamesAsync(int take, int skip = 0)
+    {
+        var page = await Api.ListAllTitlesAsync(GameFilters.StatusOf(_filter), _query, skip: skip, take: take, have: true);
+        _games = page;
+        _titles = skip == 0 ? [.. page.Items] : [.. _titles, .. page.Items];
+    }
+
+    private void Show(string view) => Nav.NavigateTo(view == "games" ? "?view=games" : "", replace: true);
+
+    private async Task FilterAsync(string value)
+    {
+        _filter = value;
+        await LoadGamesAsync(PageSize);
+    }
+
+    // Typing searches once it pauses.
+    private async Task SearchAsync(ChangeEventArgs e)
+    {
+        _query = e.Value as string ?? "";
+        var search = ++_search;
+        await Task.Delay(250);
+        if (search == _search)
+            await LoadGamesAsync(PageSize);
+    }
+
+    private Task MoreAsync() => LoadGamesAsync(PageSize, _titles.Count);
+
+    private Task ScanAsync() => StartAsync(() => Api.ScanLibraryAsync());
+
+    private Task RefreshAsync() => StartAsync(() => Api.RefreshCatalogueAsync());
+
+    private async Task StartAsync(Func<Task<TaskInfo>> start)
+    {
+        _error = null;
+        try
+        {
+            _active = [.. _active, await start()];
+        }
+        catch (RomdexApiException e)
+        {
+            _error = e.Message;
+        }
+    }
+
+    public void Dispose() => Events.Received -= OnEvent;
+}

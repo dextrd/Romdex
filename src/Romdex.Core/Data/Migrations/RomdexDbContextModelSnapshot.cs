@@ -106,6 +106,248 @@ namespace Romdex.Core.Data.Migrations
                     b.ToTable("BackgroundTasks");
                 });
 
+            modelBuilder.Entity("Romdex.Core.Data.CatalogueSystem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("BiosForId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DatDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DatVersion")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ImportedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PluginInstanceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PluginSystemId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BiosForId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("PluginInstanceId");
+
+                    b.ToTable("Systems");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.Dump", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CloneOf")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Disc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Kinds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Languages")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Regions")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Release")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Serial")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SystemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TitleId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TitleId");
+
+                    b.HasIndex("SystemId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Dumps");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.DumpFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Crc32")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DumpId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Md5")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sha1")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DumpId");
+
+                    b.HasIndex("Md5");
+
+                    b.HasIndex("Sha1");
+
+                    b.HasIndex("Crc32", "Size");
+
+                    b.ToTable("DumpFiles");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.LibraryContent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Crc32")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Entry")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HeaderlessCrc32")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HeaderlessMd5")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HeaderlessSha1")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("HeaderlessSize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("LibraryFileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Md5")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sha1")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LibraryFileId");
+
+                    b.ToTable("LibraryContents");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.LibraryFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Container")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("HashedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Path")
+                        .IsUnique();
+
+                    b.ToTable("LibraryFiles");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.LibraryMatch", b =>
+                {
+                    b.Property<Guid>("ContentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DumpFileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Headerless")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ContentId", "DumpFileId");
+
+                    b.HasIndex("DumpFileId");
+
+                    b.ToTable("LibraryMatches");
+                });
+
             modelBuilder.Entity("Romdex.Core.Data.PluginInstance", b =>
                 {
                     b.Property<Guid>("Id")
@@ -175,6 +417,37 @@ namespace Romdex.Core.Data.Migrations
                     b.HasKey("Key");
 
                     b.ToTable("Settings");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.Title", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("IgnoredAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PreferredDumpId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SystemId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SystemId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("Titles");
                 });
 
             modelBuilder.Entity("Romdex.Core.Data.User", b =>
@@ -314,6 +587,88 @@ namespace Romdex.Core.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Romdex.Core.Data.CatalogueSystem", b =>
+                {
+                    b.HasOne("Romdex.Core.Data.CatalogueSystem", null)
+                        .WithMany()
+                        .HasForeignKey("BiosForId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Romdex.Core.Data.PluginInstance", null)
+                        .WithMany()
+                        .HasForeignKey("PluginInstanceId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.Dump", b =>
+                {
+                    b.HasOne("Romdex.Core.Data.CatalogueSystem", null)
+                        .WithMany("Dumps")
+                        .HasForeignKey("SystemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Romdex.Core.Data.Title", "Title")
+                        .WithMany("Dumps")
+                        .HasForeignKey("TitleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Title");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.DumpFile", b =>
+                {
+                    b.HasOne("Romdex.Core.Data.Dump", "Dump")
+                        .WithMany("Files")
+                        .HasForeignKey("DumpId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Dump");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.LibraryContent", b =>
+                {
+                    b.HasOne("Romdex.Core.Data.LibraryFile", "File")
+                        .WithMany("Contents")
+                        .HasForeignKey("LibraryFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("File");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.LibraryMatch", b =>
+                {
+                    b.HasOne("Romdex.Core.Data.LibraryContent", "Content")
+                        .WithMany("Matches")
+                        .HasForeignKey("ContentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Romdex.Core.Data.DumpFile", "DumpFile")
+                        .WithMany()
+                        .HasForeignKey("DumpFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Content");
+
+                    b.Navigation("DumpFile");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.Title", b =>
+                {
+                    b.HasOne("Romdex.Core.Data.CatalogueSystem", "System")
+                        .WithMany("Titles")
+                        .HasForeignKey("SystemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("System");
+                });
+
             modelBuilder.Entity("Romdex.Core.Data.WebhookDelivery", b =>
                 {
                     b.HasOne("Romdex.Core.Data.Webhook", "Webhook")
@@ -323,6 +678,33 @@ namespace Romdex.Core.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Webhook");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.CatalogueSystem", b =>
+                {
+                    b.Navigation("Dumps");
+
+                    b.Navigation("Titles");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.Dump", b =>
+                {
+                    b.Navigation("Files");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.LibraryContent", b =>
+                {
+                    b.Navigation("Matches");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.LibraryFile", b =>
+                {
+                    b.Navigation("Contents");
+                });
+
+            modelBuilder.Entity("Romdex.Core.Data.Title", b =>
+                {
+                    b.Navigation("Dumps");
                 });
 #pragma warning restore 612, 618
         }

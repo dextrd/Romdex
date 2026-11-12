@@ -9,12 +9,16 @@ Index plugins say which systems and dumps exist. Romdex asks them in order; wher
 the first wins.
 
 - **DAT folder** (built in, set up from the start) reads the No-Intro and Redump DATs in your DAT folder.
+- **Redump** (built in, off until you add it) downloads Redump's DATs for the systems you list, such as `PSX, GC`,
+  and their BIOS DATs, and checks for new ones every week.
 
 ## Intake
 
-Intake plugins offer new dumps, such as files dropped into an inbox folder. Each runs in its own container and speaks
-an HTTP contract, so anyone can write one. Every dump is checked by its hash before it's filed. The first ones come
-in a later version.
+Intake plugins bring dumps in, as Melodex's retrievers bring music. One can search for a game you found under
+**Search** and fetch it, or hand over files that arrived by themselves, such as those dropped into an inbox folder.
+Each runs in its own container and speaks a small HTTP contract, so anyone can write one in any language. Every file
+is checked by its hash before it's filed, whatever the plugin says it is. Romdex comes with none that fetch commercial
+games; fetching and filing arrive in a later version.
 
 ## Connected apps
 

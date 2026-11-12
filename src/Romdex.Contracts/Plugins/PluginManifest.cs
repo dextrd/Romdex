@@ -10,7 +10,7 @@ public enum PluginType
     /// <summary>Catalogue data: which systems and dumps exist, from DATs, and titles and art by hash.</summary>
     Index,
 
-    /// <summary>Hands over dumps that arrived, into staging. Runs out of process behind the HTTP contract.</summary>
+    /// <summary>Finds dumps of a game, or hands over ones that arrived, into staging. Runs out of process behind the HTTP contract.</summary>
     Intake,
 
     /// <summary>Tells an app that uses the library, such as RomM, about new games, and opens games there.</summary>
@@ -45,7 +45,8 @@ public sealed record PluginManifest
     public string? Homepage { get; init; }
 
     /// <summary>
-    /// Capability names from <see cref="Index.IndexCapabilities"/> or <see cref="Connectors.ConnectorCapabilities"/>.
+    /// Capability names from <see cref="Index.IndexCapabilities"/>, <see cref="Intake.IntakeCapabilities"/> or
+    /// <see cref="Connectors.ConnectorCapabilities"/>.
     /// The core and API only offer what is declared here.
     /// </summary>
     public IReadOnlyList<string> Capabilities { get; init; } = [];

@@ -1520,3 +1520,17 @@ table.slots thead th { height: 32px; box-sizing: border-box; }
 .format-folders { margin: -.25rem 0 .75rem; }
 .format-folders summary { cursor: pointer; }
 .format-folders ul { max-height: 12rem; overflow: auto; margin: .4rem 0 0; padding-left: 1.2rem; font-size: .85rem; }
+
+/* The catalogue: systems, titles and their dumps. */
+.badge.bad { color: var(--missing); background: var(--bg); border: 1px solid var(--missing); }
+.counts { display: flex; gap: 1.25rem; flex-wrap: wrap; margin: .5rem 0 1rem; }
+.counts span { white-space: nowrap; }
+.dump { padding: .9rem 1.1rem; border-bottom: 1px solid var(--border); }
+.dump:last-child { border-bottom: none; }
+.dump-head { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.dump-name { font-weight: 600; flex: 1; min-width: 12rem; overflow-wrap: anywhere; }
+.dump-files { margin-top: .5rem; font-size: .85rem; }
+.dump-files .file { margin-top: .35rem; overflow-wrap: anywhere; }
+.hashes { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .15rem; }
+.hashes code { font-size: .78rem; }
+.toolbar .search-box { flex: 1; min-width: 12rem; }

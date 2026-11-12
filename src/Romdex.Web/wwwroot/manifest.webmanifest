@@ -1,7 +1,7 @@
 {
   "name": "Romdex",
   "short_name": "Romdex",
-  "description": "Find what's missing from your ROM library, verified by hash, and bring new dumps in.",
+  "description": "Manage your ROM library, verified by hash, and bring new dumps in.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f5f7fa",

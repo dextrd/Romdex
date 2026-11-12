@@ -1,10 +1,9 @@
 # Romdex
 
-Romdex knows what's in your game library and what's missing from it. It matches every file by its hash against the
-No-Intro and Redump DATs you give it. It's part of the dextrd family, alongside Melodex for music.
+Romdex manages your game library: it matches every file by its hash against the No-Intro and Redump DATs you give it,
+so it knows what each one is and whether it's a good dump. It's part of the dextrd family, alongside Melodex for music.
 
-Romdex is early. This version is the shell: accounts, plugins, background tasks, the API and the web app. Systems,
-matching, intake and tidying come next.
+Romdex is early. This version reads and verifies the library; intake and tidying come next.
 
 ## Running it
 

@@ -28,7 +28,7 @@ public sealed class AccessTests : IDisposable
     public AccessTests()
     {
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder
-            .UseSetting("Romdex:DataPath", _dataPath)
+            .UseSetting("Romdex:DataPath", _dataPath).UseSetting("Romdex:CatalogueRefreshHours", "0")
             .ConfigureServices(services =>
             {
                 services.AddSingleton<IStartupFilter>(new RemoteAddress());

@@ -13,7 +13,7 @@ public sealed class RomdexFactory : WebApplicationFactory<Program>
     private readonly string _dataPath = Path.Combine(Path.GetTempPath(), "romdex-tests", Guid.NewGuid().ToString("N"));
 
     protected override void ConfigureWebHost(IWebHostBuilder builder) =>
-        builder.UseSetting("Romdex:DataPath", _dataPath);
+        builder.UseSetting("Romdex:DataPath", _dataPath).UseSetting("Romdex:CatalogueRefreshHours", "0");
 
     protected override void Dispose(bool disposing)
     {

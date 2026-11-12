@@ -1,3 +1,5 @@
+using Romdex.Core.Catalogue;
+using Romdex.Core.Library;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Romdex.Client;
@@ -56,6 +58,18 @@ builder.Services.AddSingleton<TaskCancellations>();
 builder.Services.AddScoped<TaskQueue>();
 builder.Services.AddScoped<TaskTitles>();
 builder.Services.AddHostedService<TaskWorker>();
+
+// The catalogue and the library.
+builder.Services.AddScoped<CatalogueImporter>();
+builder.Services.AddScoped<Preferences>();
+builder.Services.AddSingleton<LibraryViews>();
+builder.Services.AddScoped<LibraryViewBuilder>();
+builder.Services.AddScoped<LibraryMatcher>();
+builder.Services.AddScoped<LibraryScanner>();
+builder.Services.AddSingleton<ContainerReader>();
+builder.Services.AddScoped<ITaskHandler, CatalogueRefreshTask>();
+builder.Services.AddScoped<ITaskHandler, LibraryScanTask>();
+builder.Services.AddHostedService<CatalogueSchedule>();
 
 // Events: announced on the event stream and sent to webhooks
 builder.Services.AddHttpClient(WebhookSender.HttpClientName, http => http.Timeout = TimeSpan.FromSeconds(15));
@@ -127,6 +141,8 @@ var api = app.MapGroup("/api/v1");
 api.MapSystemEndpoints();
 api.MapSetupEndpoints();
 api.MapTaskEndpoints();
+api.MapCatalogueEndpoints();
+api.MapLibraryEndpoints();
 api.MapPluginEndpoints();
 api.MapAccessEndpoints();
 api.MapWebhookEndpoints();
