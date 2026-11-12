@@ -18,6 +18,7 @@ import argparse
 import csv
 import io
 import json
+import os
 import sys
 import urllib.request
 
@@ -51,7 +52,7 @@ def main():
     parser.add_argument("igir", help="igir's CSV report")
     parser.add_argument("--romdex", help="Romdex's address, such as http://localhost:8788")
     parser.add_argument("--api-key", help="a Romdex API key that can read")
-    parser.add_argument("--romdex-report", action="append", default=[], help="a report saved from Romdex instead; repeatable")
+    parser.add_argument("--romdex-report", action="append", default=[], help="a report saved from Romdex, or a folder of them, instead; repeatable")
     parser.add_argument("--show", type=int, default=25, help="how many disagreements to list per DAT (default 25)")
     args = parser.parse_args()
 
@@ -60,8 +61,10 @@ def main():
     if args.romdex_report:
         romdex = {}
         for path in args.romdex_report:
-            with open(path, encoding="utf-8-sig") as f:
-                romdex.update(read_report(f.read()))
+            paths = sorted(os.path.join(path, n) for n in os.listdir(path) if n.endswith(".csv")) if os.path.isdir(path) else [path]
+            for report in paths:
+                with open(report, encoding="utf-8-sig") as f:
+                    romdex.update(read_report(f.read()))
     elif args.romdex and args.api_key:
         romdex = romdex_reports(args.romdex.rstrip("/"), args.api_key, igir.keys())
     else:

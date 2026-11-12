@@ -13,3 +13,6 @@ node_modules/
 sandbox/roms/
 sandbox/inbox/
 sandbox/dats/
+
+# The Phase 1 gate library (tools/make-gate-library.py).
+/gate/
